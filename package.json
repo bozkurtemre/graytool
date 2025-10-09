@@ -1,0 +1,39 @@
+{
+  "name": "graytool-extension",
+  "version": "1.0.0",
+  "description": "Graylog tool Chrome extension for injecting buttons in Graylog logs",
+  "main": "background.js",
+  "scripts": {
+    "build": "npm run build:css && npm run build:js",
+    "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+    "build:js": "esbuild ./popup/main.tsx --bundle --outfile=./dist/popup.js --format=iife --jsx=automatic --jsx-import-source=react --minify --target=es2020",
+    "build:prod": "NODE_ENV=production npm run build",
+    "watch": "npm run watch:css & npm run watch:js",
+    "watch:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --watch",
+    "watch:js": "esbuild ./popup/main.tsx --bundle --outfile=./dist/popup.js --format=iife --jsx=automatic --jsx-import-source=react --watch --sourcemap",
+    "dev": "npm run watch",
+    "clean": "rm -rf dist/*",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "chrome-extension",
+    "graylog",
+    "logging"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "autoprefixer": "^10.4.0",
+    "esbuild": "^0.19.0",
+    "postcss": "^8.4.0",
+    "shadcn": "^3.4.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
