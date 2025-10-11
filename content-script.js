@@ -9,6 +9,583 @@ console.log("GrayTool: Chrome APIs check:", {
   runtime: !!(chrome && chrome.runtime)
 });
 
+// Add CSS for message detail popup
+const popupStyles = `
+  .graytool-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  }
+  
+  .graytool-popup-content {
+    background: #1e1e1e;
+    border-radius: 8px;
+    padding: 20px;
+    max-width: 90%;
+    max-height: 90%;
+    overflow: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    color: #d4d4d4;
+  }
+  
+  .graytool-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #404040;
+    padding-bottom: 10px;
+  }
+  
+  .graytool-popup-title {
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: bold;
+  }
+  
+  .graytool-close-btn {
+    background: #2d2d30;
+    color: #cccccc;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  
+  .graytool-close-btn:hover {
+    background: #3e3e42;
+  }
+  
+  .graytool-copy-btn {
+    background: #0e639c;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-left: 10px;
+  }
+  
+  .graytool-copy-btn:hover {
+    background: #1177bb;
+  }
+  
+  .graytool-json-container {
+    background: #1e1e1e;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    padding: 15px;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    overflow-x: auto;
+  }
+  
+  .json-key {
+    color: #9cdcfe;
+  }
+  
+  .json-string {
+    color: #ce9178;
+  }
+  
+  .json-number {
+    color: #b5cea8;
+  }
+  
+  .json-boolean {
+    color: #569cd6;
+  }
+  
+  .json-null {
+    color: #569cd6;
+  }
+  
+  .json-punctuation {
+    color: #d4d4d4;
+  }
+  
+  .json-toggle {
+    color: #cccccc;
+    cursor: pointer;
+    user-select: none;
+    margin-right: 4px;
+    font-family: monospace;
+    font-size: 12px;
+    display: inline-block;
+    width: 12px;
+    text-align: center;
+  }
+  
+  .json-toggle:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
+  
+  .json-length {
+    color: #6a9955;
+    font-style: italic;
+    font-size: 11px;
+    opacity: 0.8;
+  }
+  
+  .json-collapsible {
+    margin-left: 0;
+  }
+`;
+
+// Inject styles
+const styleSheet = document.createElement('style');
+styleSheet.textContent = popupStyles;
+document.head.appendChild(styleSheet);
+
+// JSON formatter with interactive expand/collapse functionality
+function formatJSON(obj, indent = 0, path = '') {
+  const spaces = '  '.repeat(indent);
+  const uniqueId = Math.random().toString(36).substring(2, 9);
+  
+  if (obj === null) {
+    return `<span class="json-null">null</span>`;
+  }
+  
+  if (typeof obj === 'string') {
+    return `<span class="json-string">"${escapeHtml(obj)}"</span>`;
+  }
+  
+  if (typeof obj === 'number') {
+    return `<span class="json-number">${obj}</span>`;
+  }
+  
+  if (typeof obj === 'boolean') {
+    return `<span class="json-boolean">${obj}</span>`;
+  }
+  
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) {
+      return '<span class="json-punctuation">[]</span>';
+    }
+    
+    const containerId = `array-${uniqueId}`;
+    const toggleId = `toggle-${uniqueId}`;
+    
+    const items = obj.map((item, index) => 
+      `${spaces}  ${formatJSON(item, indent + 1, `${path}[${index}]`)}`
+    ).join('<span class="json-punctuation">,</span>\n');
+    
+    return `<span class="json-toggle" data-container="${containerId}" data-toggle="${toggleId}">▼</span><span class="json-punctuation">[</span><span class="json-length"> // ${obj.length} items</span>
+<div id="${containerId}" class="json-collapsible">${items}</div>
+${spaces}<span class="json-punctuation">]</span>`;
+  }
+  
+  if (typeof obj === 'object') {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) {
+      return '<span class="json-punctuation">{}</span>';
+    }
+    
+    const containerId = `object-${uniqueId}`;
+    const toggleId = `toggle-${uniqueId}`;
+    
+    const items = keys.map(key => 
+      `${spaces}  <span class="json-key">"${escapeHtml(key)}"</span><span class="json-punctuation">:</span> ${formatJSON(obj[key], indent + 1, `${path}.${key}`)}`
+    ).join('<span class="json-punctuation">,</span>\n');
+    
+    return `<span class="json-toggle" data-container="${containerId}" data-toggle="${toggleId}">▼</span><span class="json-punctuation">{</span><span class="json-length"> // ${keys.length} keys</span>
+<div id="${containerId}" class="json-collapsible">${items}</div>
+${spaces}<span class="json-punctuation">}</span>`;
+  }
+  
+  return escapeHtml(String(obj));
+}
+
+// Helper function to escape HTML
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Toggle function for JSON nodes (removed - now using event delegation)
+
+// Show message detail popup
+function showMessageDetailPopup(messageText) {
+  console.log("GrayTool: Showing message detail popup for:", messageText.substring(0, 100) + "...");
+  
+  // Parse message content
+  let parsedContent;
+  let rawContent = messageText;
+  
+  try {
+    if (messageText.startsWith('{') && messageText.endsWith('}')) {
+      parsedContent = JSON.parse(messageText);
+    } else {
+      parsedContent = { message: messageText };
+    }
+  } catch (e) {
+    parsedContent = { 
+      error: "Failed to parse JSON", 
+      rawMessage: messageText 
+    };
+  }
+  
+  // Create popup overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'graytool-popup-overlay';
+  
+  // Create popup content
+  const popupContent = document.createElement('div');
+  popupContent.className = 'graytool-popup-content';
+  
+  // Create header
+  const header = document.createElement('div');
+  header.className = 'graytool-popup-header';
+  
+  const title = document.createElement('div');
+  title.className = 'graytool-popup-title';
+  title.textContent = '📋 Raw Data';
+  
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.gap = '8px';
+  buttonContainer.style.alignItems = 'center';
+  
+  const copyButton = document.createElement('button');
+  copyButton.className = 'graytool-copy-btn';
+  copyButton.textContent = 'Copy';
+  copyButton.style.minWidth = '80px';
+  copyButton.style.height = '32px';
+  
+  const closeButton = document.createElement('button');
+  closeButton.className = 'graytool-close-btn';
+  closeButton.textContent = 'Close';
+  closeButton.style.minWidth = '80px';
+  closeButton.style.height = '32px';
+  
+  buttonContainer.appendChild(copyButton);
+  buttonContainer.appendChild(closeButton);
+  header.appendChild(title);
+  header.appendChild(buttonContainer);
+  
+  // Create JSON container
+  const jsonContainer = document.createElement('div');
+  jsonContainer.className = 'graytool-json-container';
+  jsonContainer.innerHTML = formatJSON(parsedContent);
+  
+  // Assemble popup
+  popupContent.appendChild(header);
+  popupContent.appendChild(jsonContainer);
+  overlay.appendChild(popupContent);
+  
+  // Add to page
+  document.body.appendChild(overlay);
+  
+  // Add button functionality using event delegation
+  header.addEventListener('click', (e) => {
+    if (e.target.classList.contains('graytool-copy-btn')) {
+      navigator.clipboard.writeText(rawContent);
+      e.target.textContent = 'Copied!';
+      setTimeout(() => e.target.textContent = 'Copy', 2000);
+      console.log("GrayTool: Copied content to clipboard");
+    } else if (e.target.classList.contains('graytool-close-btn')) {
+      document.body.removeChild(overlay);
+      console.log("GrayTool: Closed popup");
+    }
+  });
+  
+  // Add JSON toggle functionality using event delegation
+  jsonContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('json-toggle')) {
+      const containerId = e.target.getAttribute('data-container');
+      const container = document.getElementById(containerId);
+      
+      if (container) {
+        const isCollapsed = container.style.display === 'none';
+        container.style.display = isCollapsed ? 'block' : 'none';
+        e.target.textContent = isCollapsed ? '▼' : '▶';
+        
+        console.log("GrayTool: Toggled JSON node:", containerId, isCollapsed ? 'expanded' : 'collapsed');
+      }
+    }
+  });
+  
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+}
+
+// Extract message content from log row
+function extractMessageFromRow(row) {
+  console.log("GrayTool: Extracting message from row:", row);
+  
+  // First try to find the specific message field in Graylog expanded view
+  const messageFieldHeader = row.querySelector('[data-testid="message-field-name-message"]');
+  if (messageFieldHeader) {
+    console.log("GrayTool: Found message field header:", messageFieldHeader);
+    
+    // Try to find the corresponding content
+    // Method 1: Next sibling (usually <dd> after <dt>)
+    let messageContent = messageFieldHeader.nextElementSibling;
+    if (messageContent && messageContent.innerText.trim()) {
+      const content = messageContent.innerText.trim();
+      console.log("GrayTool: Found message content via nextSibling, length:", content.length);
+      if (content.length > 10) { // Avoid empty or very short content
+        return content;
+      }
+    }
+    
+    // Method 2: Look for <dd> in parent
+    const parent = messageFieldHeader.parentElement;
+    if (parent) {
+      const ddElement = parent.querySelector('dd');
+      if (ddElement && ddElement.innerText.trim()) {
+        const content = ddElement.innerText.trim();
+        console.log("GrayTool: Found message content via dd element, length:", content.length);
+        if (content.length > 10) {
+          return content;
+        }
+      }
+    }
+    
+    // Method 3: Look for any content element near the message field
+    const nearbySelectors = [
+      '[data-testid*="message-field-content"]',
+      '[data-testid*="message"] + *',
+      '.field-content',
+      'pre',
+      'code'
+    ];
+    
+    for (const selector of nearbySelectors) {
+      const element = parent ? parent.querySelector(selector) : row.querySelector(selector);
+      if (element && element.innerText.trim() && element.innerText.trim().length > 10) {
+        const content = element.innerText.trim();
+        console.log("GrayTool: Found message content via selector:", selector, "length:", content.length);
+        return content;
+      }
+    }
+  }
+  
+  // Fallback: Try other expanded view selectors
+  const expandedSelectors = [
+    '.message-body pre',        // Raw message in <pre> tag
+    '.message-content pre',     // Message content in <pre>
+    'pre.message',              // <pre> with message class
+    '[data-testid*="message"] pre', // Message in testid with <pre>
+    '.field-content pre',       // Field content with <pre>
+    'pre',                      // Any <pre> tag (raw content)
+    '.message-body',            // Message body div
+    '.message-content',         // Message content div
+    '.expanded-message',        // Expanded message area
+    '.log-message-body',        // Log message body
+    '.raw-message'              // Raw message area
+  ];
+  
+  // Try to get full message content first
+  for (const selector of expandedSelectors) {
+    const msgElement = row.querySelector(selector);
+    if (msgElement && msgElement.innerText.trim()) {
+      const content = msgElement.innerText.trim();
+      console.log("GrayTool: Found message with selector:", selector, "Content length:", content.length);
+      
+      // If it's a long content or contains JSON, prefer it
+      if (content.length > 100 || content.includes('{')) {
+        return content;
+      }
+    }
+  }
+  
+  // Fallback to shorter message selectors
+  const shortMessageSelectors = [
+    '[data-field="message"]',
+    '.message',
+    '[data-testid*="message"]'
+  ];
+  
+  for (const selector of shortMessageSelectors) {
+    const msgElement = row.querySelector(selector);
+    if (msgElement && msgElement.innerText.trim()) {
+      const content = msgElement.innerText.trim();
+      console.log("GrayTool: Found short message with selector:", selector, "Content:", content.substring(0, 100));
+      return content;
+    }
+  }
+  
+  // Try to find the longest text content that looks like a message
+  const allTextElements = row.querySelectorAll('*');
+  let longestContent = '';
+  
+  Array.from(allTextElements).forEach(el => {
+    const text = el.innerText;
+    if (text && text.length > longestContent.length) {
+      // Skip if it's just navigation or UI text
+      if (!text.includes('timestamp') && !text.includes('source') && 
+          (text.includes('{') || text.length > 50)) {
+        longestContent = text;
+      }
+    }
+  });
+  
+  if (longestContent) {
+    console.log("GrayTool: Using longest content, length:", longestContent.length);
+    return longestContent.substring(0, 5000); // Limit to 5KB
+  }
+  
+  // Final fallback - try to find JSON in any text content
+  const textContent = row.innerText;
+  const jsonMatch = textContent.match(/\{.*\}/s);
+  if (jsonMatch) {
+    console.log("GrayTool: Found JSON match in text content");
+    return jsonMatch[0];
+  }
+  
+  console.log("GrayTool: Using fallback text content");
+  return textContent.substring(0, 1000) + (textContent.length > 1000 ? '...' : '');
+}
+
+// Add Message Detail button to expanded rows/detail views
+function addMessageDetailButton(element) {
+  try {
+    // Check if element is valid
+    if (!element || !element.querySelector || typeof element.querySelector !== 'function') {
+      console.log("GrayTool: Invalid element passed to addMessageDetailButton");
+      return;
+    }
+    
+    // Check if Message Detail button already exists
+    if (element.querySelector('button[data-graytool-message-detail]')) {
+      console.log("GrayTool: Message Detail button already exists in detail view, skipping");
+      return;
+    }
+    
+    console.log("GrayTool: Adding Message Detail button to expanded view");
+  
+  // Create Message Detail button
+  const messageDetailButton = document.createElement("button");
+  messageDetailButton.innerText = "Message detail";
+  messageDetailButton.style.marginRight = "5px";
+  messageDetailButton.setAttribute('data-graytool-message-detail', 'true');
+  
+  // Copy styles from existing buttons - look for proper button styles
+  let existingButton;
+  
+  // First try to find buttons in the same btn-group
+  const parentBtnGroup = element.querySelector(".btn-group") || element.closest(".btn-group");
+  if (parentBtnGroup) {
+    existingButton = parentBtnGroup.querySelector("button:not([data-graytool-message-detail]):not([data-graytool-button-id])");
+  }
+  
+  // If not found, try parent elements
+  if (!existingButton) {
+    let parent = element.parentElement;
+    while (parent && !existingButton) {
+      const parentBtnGroup = parent.querySelector(".btn-group");
+      if (parentBtnGroup) {
+        existingButton = parentBtnGroup.querySelector("button:not([data-graytool-message-detail]):not([data-graytool-button-id])");
+      }
+      parent = parent.parentElement;
+    }
+  }
+  
+  // Global search as last resort
+  if (!existingButton) {
+    existingButton = document.querySelector(".btn-group button:not([data-graytool-message-detail]):not([data-graytool-button-id])");
+  }
+  
+  if (existingButton && existingButton.className) {
+    // Copy classes but ensure we don't copy active/selected states
+    let classes = existingButton.className;
+    classes = classes.replace(/\b(active|selected|focus|pressed)\b/g, '').trim();
+    messageDetailButton.className = classes;
+    console.log("GrayTool: Copied button styles from existing button:", classes);
+  } else {
+    // Enhanced fallback with common Graylog button classes
+    messageDetailButton.className = "btn btn-sm btn-default";
+    console.log("GrayTool: Using fallback button styles");
+  }
+  
+  messageDetailButton.onclick = () => {
+    const messageText = extractMessageFromRow(element);
+    showMessageDetailPopup(messageText);
+  };
+  
+  // Find btn-group in expanded view
+  let btnGroup = element.querySelector(".btn-group");
+  
+  // Search in parent elements if not found
+  if (!btnGroup) {
+    let parent = element.parentElement;
+    while (parent && !btnGroup) {
+      btnGroup = parent.querySelector(".btn-group");
+      parent = parent.parentElement;
+    }
+  }
+  
+  if (btnGroup) {
+    console.log("GrayTool: Found btn-group in expanded view, adding Message Detail button");
+    
+    // Use same structure as custom buttons
+    const existingDiv = btnGroup.querySelector("div:has(button[data-gl-clipboard-button])") || 
+                       btnGroup.querySelector("div:has(span[role='button'] button)") ||
+                       btnGroup.querySelector("div span[role='button']")?.parentElement;
+    
+    if (existingDiv) {
+      console.log("GrayTool: Found existing structure in expanded view");
+      
+      const wrapper = document.createElement("div");
+      wrapper.className = existingDiv.className;
+      
+      const span = document.createElement("span");
+      span.setAttribute("role", "button");
+      
+      const existingSpan = existingDiv.querySelector("span");
+      if (existingSpan) {
+        span.className = existingSpan.className;
+      }
+      
+      messageDetailButton.setAttribute("type", "button");
+      span.appendChild(messageDetailButton);
+      wrapper.appendChild(span);
+      
+      btnGroup.insertBefore(wrapper, btnGroup.firstChild);
+      console.log("GrayTool: Added Message Detail button to expanded view with wrapper");
+    } else {
+      btnGroup.insertBefore(messageDetailButton, btnGroup.firstChild);
+      console.log("GrayTool: Added Message Detail button directly to expanded view btn-group");
+    }
+  } else {
+    // Create a button container at the top of expanded view
+    const buttonContainer = document.createElement("div");
+    buttonContainer.style.marginBottom = "10px";
+    buttonContainer.style.padding = "5px";
+    buttonContainer.style.borderBottom = "1px solid #eee";
+    buttonContainer.appendChild(messageDetailButton);
+    
+    if (element.firstChild) {
+      element.insertBefore(buttonContainer, element.firstChild);
+    } else {
+      element.appendChild(buttonContainer);
+    }
+    console.log("GrayTool: Created button container in expanded view");
+  }
+  } catch (e) {
+    console.log("GrayTool: Error in addMessageDetailButton:", e.message);
+  }
+}
+
 function parseKeyValuePairs(text) {
   const fields = {};
   if (!text) return fields;
@@ -98,6 +675,7 @@ function appendButtonsToLogRow(logRow, fields, buttons, baseUrl) {
   console.log("GrayTool: Processing row with fields:", fields);
   console.log("GrayTool: Available buttons:", buttons);
   
+  // Add custom buttons
   buttons.forEach(btn => {
     console.log("GrayTool: Checking button:", btn.buttonName, "for route:", btn.graylogRoute);
     
@@ -143,11 +721,19 @@ function appendButtonsToLogRow(logRow, fields, buttons, baseUrl) {
       return;
     }
     
+    // Check if this custom button already exists
+    const buttonId = `graytool-btn-${btn.buttonName.toLowerCase().replace(/\s+/g, '-')}`;
+    if (logRow.querySelector(`button[data-graytool-button-id="${buttonId}"]`)) {
+      console.log("GrayTool: Custom button already exists:", btn.buttonName);
+      return;
+    }
+
     console.log("GrayTool: Adding button:", btn.buttonName);
 
     const url = buildAdminUrl(btn, fields, baseUrl);
     const button = document.createElement("button");
     button.innerText = btn.buttonName;
+    button.setAttribute('data-graytool-button-id', buttonId);
     
     // Mevcut butonların stillerini kopyala (önce lokal sonra global)
     let existingButton = logRow.querySelector("button, .btn");
@@ -469,6 +1055,11 @@ function processLogRow(row) {
 }
 
 function processMessageDetail(detail) {
+  console.log("GrayTool: Processing message detail");
+  
+  // Add Message Detail button to expanded row/detail view
+  addMessageDetailButton(detail);
+  
   const fields = {};
   
   // Mesaj detaylarından field'ları çıkar
@@ -579,13 +1170,126 @@ function debugCurrentState() {
 // Make debug function available globally for testing
 window.debugGrayTool = debugCurrentState;
 
+// Observer for expanded rows/message details
+const expandedRowObserver = new MutationObserver((mutations) => {
+  try {
+    mutations.forEach((mutation) => {
+      if (mutation.addedNodes) {
+        mutation.addedNodes.forEach((node) => {
+          try {
+            if (node && node.nodeType === Node.ELEMENT_NODE) {
+              // Check for expanded message details
+              let expandedElements = [];
+              try {
+                if (node.querySelectorAll && typeof node.querySelectorAll === 'function') {
+                  expandedElements = node.querySelectorAll(".message-detail, .message-details, .expanded-message, [class*='message'][class*='detail']");
+                }
+              } catch (e) {
+                console.log("GrayTool: Error in querySelectorAll:", e.message);
+              }
+              
+              // Also check if the node itself is an expanded element
+              try {
+                if (node.classList && typeof node.classList.contains === 'function') {
+                  const isMessageDetail = node.classList.contains('message-detail') || 
+                                        node.classList.contains('message-details') ||
+                                        node.classList.contains('expanded-message');
+                  
+                  const hasMessageDetailClass = node.className && 
+                                              typeof node.className === 'string' && 
+                                              node.className.includes('message') && 
+                                              node.className.includes('detail');
+                  
+                  if (isMessageDetail || hasMessageDetailClass) {
+                    console.log("GrayTool: Detected expanded row/detail:", node);
+                    addMessageDetailButton(node);
+                  }
+                }
+              } catch (e) {
+                console.log("GrayTool: Error checking node classes:", e.message);
+              }
+              
+              // Check found elements
+              try {
+                if (expandedElements && expandedElements.length > 0) {
+                  Array.from(expandedElements).forEach(element => {
+                    console.log("GrayTool: Detected expanded row/detail:", element);
+                    addMessageDetailButton(element);
+                  });
+                }
+              } catch (e) {
+                console.log("GrayTool: Error processing expanded elements:", e.message);
+              }
+            }
+          } catch (e) {
+            console.log("GrayTool: Error processing node:", e.message);
+          }
+        });
+      }
+    });
+  } catch (e) {
+    console.log("GrayTool: Error in expandedRowObserver:", e.message);
+  }
+});
+
+// Click listener for row expansion detection
+document.addEventListener('click', (event) => {
+  try {
+    const target = event.target;
+    
+    // Check if clicked element might be an expand button
+    if (target && target.classList && typeof target.classList.contains === 'function') {
+      const isExpandButton = target.classList.contains('expand') ||
+                            target.classList.contains('collapse') ||
+                            target.getAttribute('aria-expanded') !== null;
+      
+      let hasExpandParent = false;
+      try {
+        hasExpandParent = target.closest('[aria-expanded]') ||
+                         target.closest('.expandable') ||
+                         target.closest('.collapsible');
+      } catch (e) {
+        // closest() not supported or other error
+      }
+      
+      if (isExpandButton || hasExpandParent) {
+        console.log("GrayTool: Detected potential row expansion click:", target);
+        
+        // Wait a bit for expansion to complete, then check for new expanded content
+        setTimeout(() => {
+          try {
+            const expandedElements = document.querySelectorAll(".message-detail, .message-details, .expanded-message");
+            if (expandedElements && expandedElements.length > 0) {
+              Array.from(expandedElements).forEach(element => {
+                try {
+                  if (element && !element.querySelector('button[data-graytool-message-detail]')) {
+                    console.log("GrayTool: Adding Message Detail button to newly expanded content");
+                    addMessageDetailButton(element);
+                  }
+                } catch (e) {
+                  console.log("GrayTool: Error adding button to expanded element:", e.message);
+                }
+              });
+            }
+          } catch (e) {
+            console.log("GrayTool: Error in expansion timeout callback:", e.message);
+          }
+        }, 500);
+      }
+    }
+  } catch (e) {
+    console.log("GrayTool: Error in click listener:", e.message);
+  }
+}, true);
+
 // Initialize configuration on page load
 initializeConfig();
 
 // Chrome extension API'lerinin mevcut olup olmadığını kontrol et
 if (chrome && chrome.storage && chrome.runtime) {
   observer.observe(document.body, { childList: true, subtree: true });
-  console.log("GrayTool: Content script loaded successfully");
+  expandedRowObserver.observe(document.body, { childList: true, subtree: true });
+  console.log("GrayTool: Content script loaded successfully with expanded row detection");
 } else {
   console.error("GrayTool: Chrome extension APIs not available");
 }
