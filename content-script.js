@@ -143,6 +143,52 @@ const popupStyles = `
   .json-collapsible {
     margin-left: 0;
   }
+  
+  .graytool-quick-actions-dropdown {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    margin: 10px 0;
+    padding: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
+  
+  .graytool-action-btn {
+    display: block;
+    width: 100%;
+    background: #3c3c3c;
+    color: #ffffff;
+    border: 1px solid #555555;
+    border-radius: 3px;
+    padding: 8px 12px;
+    margin: 4px 0;
+    cursor: pointer;
+    font-size: 13px;
+    text-align: left;
+    transition: background-color 0.2s ease;
+  }
+  
+  .graytool-action-btn:hover {
+    background: #4a4a4a;
+    border-color: #666666;
+  }
+  
+  .graytool-action-btn:active {
+    background: #2a2a2a;
+  }
+  
+  .graytool-quick-actions-btn {
+    background: #0e639c;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .graytool-quick-actions-btn:hover {
+    background: #1177bb;
+  }
 `;
 
 // Inject styles
@@ -216,6 +262,139 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// Handle Quick Actions
+function handleQuickAction(action, rawContent, parsedContent) {
+  console.log("GrayTool: Executing quick action:", action);
+  
+  switch (action) {
+    case 'jira':
+      handleJiraTicket(rawContent, parsedContent);
+      break;
+    case 'ai':
+      handleAIAnalysis(rawContent, parsedContent);
+      break;
+    case 'permalink':
+      handlePermalink(rawContent, parsedContent);
+      break;
+    default:
+      console.log("GrayTool: Unknown action:", action);
+  }
+}
+
+// JIRA Ticket Creation
+function handleJiraTicket(rawContent, parsedContent) {
+  const summary = extractErrorSummary(parsedContent);
+  const description = `Log Details:\n\`\`\`\n${rawContent.substring(0, 1000)}${rawContent.length > 1000 ? '...' : ''}\n\`\`\``;
+  
+  // Create a basic JIRA URL (customizable)
+  const jiraUrl = `https://your-jira-instance.atlassian.net/secure/CreateIssue.jspa?pid=10000&issuetype=1&summary=${encodeURIComponent(summary)}&description=${encodeURIComponent(description)}`;
+  
+  window.open(jiraUrl, '_blank');
+  console.log("GrayTool: Opened JIRA ticket creation");
+}
+
+// AI Analysis
+function handleAIAnalysis(rawContent, parsedContent) {
+  // Placeholder for AI analysis - can be integrated with OpenAI/Claude API
+  const analysisPrompt = `Please analyze this log entry and provide:
+1. Error classification
+2. Possible root cause
+3. Suggested solutions
+4. Severity level
+
+Log: ${rawContent.substring(0, 500)}`;
+  
+  // Copy the analysis prompt to clipboard
+  copyToClipboard(analysisPrompt).then(() => {
+    showNotification("AI Analysis prompt copied to clipboard! Paste it into ChatGPT/Claude.", "info");
+    console.log("GrayTool: AI analysis prompt copied to clipboard");
+  }).catch((error) => {
+    console.error("GrayTool: Failed to copy AI prompt:", error);
+    showNotification("Failed to copy AI prompt to clipboard", "error");
+  });
+}
+
+// Permalink Generation
+function handlePermalink(rawContent, parsedContent) {
+  const timestamp = parsedContent.timestamp || parsedContent.time || new Date().toISOString();
+  const logId = parsedContent.id || generateLogId(rawContent);
+  
+  // Generate a shareable link (customize based on your Graylog setup)
+  const permalink = `${window.location.origin}${window.location.pathname}#log=${logId}&time=${timestamp}`;
+  
+  copyToClipboard(permalink).then(() => {
+    showNotification("Permalink copied to clipboard!", "success");
+    console.log("GrayTool: Permalink copied:", permalink);
+  }).catch((error) => {
+    console.error("GrayTool: Failed to copy permalink:", error);
+    showNotification("Failed to copy permalink to clipboard", "error");
+  });
+}
+
+// Helper functions
+function copyToClipboard(text) {
+  return new Promise((resolve, reject) => {
+    // Modern clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(resolve).catch(reject);
+    } else {
+      // Fallback for older browsers
+      try {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        resolve();
+      } catch (err) {
+        reject(err);
+      }
+    }
+  });
+}
+
+function extractErrorSummary(parsedContent) {
+  const message = parsedContent.message || parsedContent.msg || "Log Entry";
+  const level = parsedContent.level_name || parsedContent.level || "INFO";
+  return `[${level}] ${message.substring(0, 100)}${message.length > 100 ? '...' : ''}`;
+}
+
+function generateLogId(content) {
+  return btoa(content.substring(0, 50)).replace(/[^a-zA-Z0-9]/g, '').substring(0, 8);
+}
+
+function showNotification(message, type = "info") {
+  const notification = document.createElement('div');
+  notification.className = `graytool-notification graytool-notification-${type}`;
+  notification.textContent = message;
+  notification.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+    color: white;
+    padding: 12px 20px;
+    border-radius: 4px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 10001;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+  `;
+  
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.parentNode.removeChild(notification);
+    }
+  }, 3000);
+}
+
 // Toggle function for JSON nodes (removed - now using event delegation)
 
 // Show message detail popup
@@ -266,6 +445,12 @@ function showMessageDetailPopup(messageText) {
   copyButton.style.minWidth = '80px';
   copyButton.style.height = '32px';
   
+  const quickActionsButton = document.createElement('button');
+  quickActionsButton.className = 'graytool-quick-actions-btn';
+  quickActionsButton.textContent = 'Quick Actions ▼';
+  quickActionsButton.style.minWidth = '120px';
+  quickActionsButton.style.height = '32px';
+  
   const closeButton = document.createElement('button');
   closeButton.className = 'graytool-close-btn';
   closeButton.textContent = 'Close';
@@ -273,9 +458,35 @@ function showMessageDetailPopup(messageText) {
   closeButton.style.height = '32px';
   
   buttonContainer.appendChild(copyButton);
+  buttonContainer.appendChild(quickActionsButton);
   buttonContainer.appendChild(closeButton);
   header.appendChild(title);
   header.appendChild(buttonContainer);
+  
+  // Create Quick Actions dropdown
+  const quickActionsDropdown = document.createElement('div');
+  quickActionsDropdown.className = 'graytool-quick-actions-dropdown';
+  quickActionsDropdown.style.display = 'none'; // Hidden by default
+  
+  // Create action buttons
+  const jiraButton = document.createElement('button');
+  jiraButton.className = 'graytool-action-btn';
+  jiraButton.textContent = '🎫 Create JIRA Ticket';
+  jiraButton.setAttribute('data-action', 'jira');
+  
+  const aiButton = document.createElement('button');
+  aiButton.className = 'graytool-action-btn';
+  aiButton.textContent = '🤖 AI Analyse';
+  aiButton.setAttribute('data-action', 'ai');
+  
+  const permalinkButton = document.createElement('button');
+  permalinkButton.className = 'graytool-action-btn';
+  permalinkButton.textContent = '🔗 Copy Permalink';
+  permalinkButton.setAttribute('data-action', 'permalink');
+  
+  quickActionsDropdown.appendChild(jiraButton);
+  quickActionsDropdown.appendChild(aiButton);
+  quickActionsDropdown.appendChild(permalinkButton);
   
   // Create JSON container
   const jsonContainer = document.createElement('div');
@@ -284,6 +495,7 @@ function showMessageDetailPopup(messageText) {
   
   // Assemble popup
   popupContent.appendChild(header);
+  popupContent.appendChild(quickActionsDropdown);
   popupContent.appendChild(jsonContainer);
   overlay.appendChild(popupContent);
   
@@ -293,14 +505,32 @@ function showMessageDetailPopup(messageText) {
   // Add button functionality using event delegation
   header.addEventListener('click', (e) => {
     if (e.target.classList.contains('graytool-copy-btn')) {
-      navigator.clipboard.writeText(rawContent);
-      e.target.textContent = 'Copied!';
-      setTimeout(() => e.target.textContent = 'Copy', 2000);
-      console.log("GrayTool: Copied content to clipboard");
+      copyToClipboard(rawContent).then(() => {
+        e.target.textContent = 'Copied!';
+        setTimeout(() => e.target.textContent = 'Copy', 2000);
+        console.log("GrayTool: Copied content to clipboard");
+      }).catch((error) => {
+        console.error("GrayTool: Failed to copy to clipboard:", error);
+        showNotification("Failed to copy to clipboard", "error");
+      });
+    } else if (e.target.classList.contains('graytool-quick-actions-btn')) {
+      // Toggle Quick Actions dropdown
+      const isVisible = quickActionsDropdown.style.display !== 'none';
+      quickActionsDropdown.style.display = isVisible ? 'none' : 'block';
+      e.target.textContent = isVisible ? 'Quick Actions ▼' : 'Quick Actions ▲';
+      console.log("GrayTool: Toggled Quick Actions dropdown:", !isVisible ? 'opened' : 'closed');
     } else if (e.target.classList.contains('graytool-close-btn')) {
       document.body.removeChild(overlay);
       document.removeEventListener('keydown', handleEscapeKey);
       console.log("GrayTool: Closed popup");
+    }
+  });
+  
+  // Add Quick Actions functionality
+  quickActionsDropdown.addEventListener('click', (e) => {
+    if (e.target.classList.contains('graytool-action-btn')) {
+      const action = e.target.getAttribute('data-action');
+      handleQuickAction(action, rawContent, parsedContent);
     }
   });
   
