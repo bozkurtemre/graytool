@@ -299,6 +299,7 @@ function showMessageDetailPopup(messageText) {
       console.log("GrayTool: Copied content to clipboard");
     } else if (e.target.classList.contains('graytool-close-btn')) {
       document.body.removeChild(overlay);
+      document.removeEventListener('keydown', handleEscapeKey);
       console.log("GrayTool: Closed popup");
     }
   });
@@ -323,8 +324,21 @@ function showMessageDetailPopup(messageText) {
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
       document.body.removeChild(overlay);
+      document.removeEventListener('keydown', handleEscapeKey);
+      console.log("GrayTool: Popup closed by overlay click");
     }
   });
+  
+  // Close on ESC key press
+  const handleEscapeKey = (e) => {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+      document.body.removeChild(overlay);
+      document.removeEventListener('keydown', handleEscapeKey);
+      console.log("GrayTool: Popup closed with ESC key");
+    }
+  };
+  
+  document.addEventListener('keydown', handleEscapeKey);
 }
 
 // Extract message content from log row
