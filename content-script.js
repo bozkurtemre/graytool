@@ -190,6 +190,19 @@ const popupStyles = `
     background: #1177bb;
   }
   
+  .graytool-context-btn {
+    background: #0e639c;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+  }
+  
+  .graytool-context-btn:hover {
+    background: #1177bb;
+  }
+  
   /* Context Menu Styles */
   .graytool-context-menu {
     position: fixed;
@@ -253,12 +266,537 @@ const popupStyles = `
     background: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
   }
+  
+  /* Context Viewer Styles */
+  .graytool-context-viewer {
+    background: #1e1e1e;
+    border-radius: 4px;
+    margin: 10px 0;
+    max-height: 500px;
+    overflow-y: auto;
+  }
+  
+  .graytool-context-section {
+    border-bottom: 1px solid #404040;
+    padding: 10px;
+  }
+  
+  .graytool-context-header {
+    color: #569cd6;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .graytool-context-log {
+    background: #252525;
+    border-left: 3px solid #404040;
+    padding: 8px;
+    margin: 4px 0;
+    font-size: 12px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .graytool-context-log:hover {
+    background: #2d2d2d;
+    border-left-color: #0e639c;
+  }
+  
+  .graytool-context-log.current {
+    background: #0e639c;
+    border-left-color: #1177bb;
+    font-weight: bold;
+  }
+  
+  .graytool-context-log-time {
+    color: #858585;
+    font-size: 11px;
+  }
+  
+  .graytool-context-log-level {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    margin-right: 6px;
+  }
+  
+  .graytool-context-log-level.ERROR {
+    background: #f44336;
+    color: white;
+  }
+  
+  .graytool-context-log-level.WARN {
+    background: #ff9800;
+    color: white;
+  }
+  
+  .graytool-context-log-level.INFO {
+    background: #2196F3;
+    color: white;
+  }
+  
+  .graytool-context-log-level.DEBUG {
+    background: #9E9E9E;
+    color: white;
+  }
+  
+  .graytool-context-log-message {
+    color: #cccccc;
+    margin-top: 4px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  
+  .graytool-context-loading {
+    text-align: center;
+    padding: 20px;
+    color: #858585;
+  }
+  
+  .graytool-context-error {
+    background: #3d1f1f;
+    border: 1px solid #5a2828;
+    color: #f48771;
+    padding: 12px;
+    border-radius: 4px;
+    margin: 10px;
+  }
+  
+  /* Tab System */
+  .graytool-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #404040;
+  }
+  
+  .graytool-tab {
+    background: #2d2d2d;
+    color: #cccccc;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 13px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+  }
+  
+  .graytool-tab:hover {
+    background: #3e3e42;
+    color: #ffffff;
+  }
+  
+  .graytool-tab.active {
+    background: #0e639c;
+    color: #ffffff;
+    border-bottom-color: #1177bb;
+  }
+  
+  .graytool-tab-content {
+    display: none;
+  }
+  
+  .graytool-tab-content.active {
+    display: block;
+  }
+  
+  .graytool-info-section {
+    background: #1e1e1e;
+    border-radius: 4px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .graytool-info-title {
+    color: #569cd6;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .graytool-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    margin: 4px 0;
+    background: #252525;
+    border-radius: 4px;
+  }
+  
+  .graytool-info-label {
+    color: #cccccc;
+    font-size: 13px;
+  }
+  
+  .graytool-info-value {
+    color: #9cdcfe;
+    font-size: 13px;
+    font-family: 'Monaco', 'Courier New', monospace;
+  }
+  
+  .graytool-info-description {
+    color: #858585;
+    font-size: 12px;
+    line-height: 1.6;
+    margin-top: 8px;
+  }
+  
+  /* Keyboard Shortcuts Help Popup */
+  .graytool-shortcuts-popup {
+    background: #2d2d2d;
+    border: 1px solid #454545;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+  
+  .graytool-shortcuts-header {
+    background: #1e1e1e;
+    padding: 16px;
+    border-bottom: 1px solid #454545;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .graytool-shortcuts-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .graytool-shortcuts-content {
+    padding: 16px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+  
+  .graytool-shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin: 4px 0;
+    background: #252525;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+  
+  .graytool-shortcut-item:hover {
+    background: #2d2d2d;
+  }
+  
+  .graytool-shortcut-description {
+    color: #cccccc;
+    font-size: 13px;
+  }
+  
+  .graytool-shortcut-keys {
+    display: flex;
+    gap: 4px;
+  }
+  
+  .graytool-shortcut-key {
+    background: #3e3e42;
+    border: 1px solid #555555;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    color: #e0e0e0;
+    min-width: 24px;
+    text-align: center;
+    box-shadow: 0 2px 0 #1e1e1e;
+  }
+  
+  .graytool-shortcuts-footer {
+    background: #1e1e1e;
+    padding: 12px 16px;
+    border-top: 1px solid #454545;
+    border-radius: 0 0 8px 8px;
+    text-align: center;
+    color: #858585;
+    font-size: 12px;
+  }
+  
+  .graytool-shortcut-indicator {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(14, 99, 156, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    z-index: 10000;
+    animation: fadeInOut 2s ease-in-out;
+  }
+  
+  @keyframes fadeInOut {
+    0%, 100% { opacity: 0; }
+    10%, 90% { opacity: 1; }
+  }
 `;
 
 // Inject styles
 const styleSheet = document.createElement('style');
 styleSheet.textContent = popupStyles;
 document.head.appendChild(styleSheet);
+
+// Keyboard Shortcuts System
+const KEYBOARD_SHORTCUTS = {
+  'CMD+K': { key: 'k', cmd: true, description: 'Quick search (focus search input)', action: 'quickSearch' },
+  'CMD+SHIFT+C': { key: 'c', cmd: true, shift: true, description: 'Copy current log as JSON', action: 'copyAsJson' },
+  'CMD+E': { key: 'e', cmd: true, description: 'Export current log', action: 'exportLog' },
+  'CMD+/': { key: '/', cmd: true, description: 'Show keyboard shortcuts', action: 'showShortcuts' },
+  'ESC': { key: 'Escape', description: 'Close popup', action: 'closePopup' },
+  'CMD+SHIFT+F': { key: 'f', cmd: true, shift: true, description: 'Toggle filter menu', action: 'toggleFilter' }
+};
+
+// Global keyboard shortcut handler
+let currentOpenPopup = null; // Track currently open popup
+
+document.addEventListener('keydown', (e) => {
+  // Check if user is typing in an input field
+  const isInputFocused = document.activeElement.tagName === 'INPUT' || 
+                         document.activeElement.tagName === 'TEXTAREA' ||
+                         document.activeElement.isContentEditable;
+  
+  // Allow some shortcuts even in input fields
+  const allowInInput = (e.metaKey || e.ctrlKey) && (e.key === '/' || e.key === 'k');
+  
+  if (isInputFocused && !allowInInput) {
+    return; // Don't intercept when typing
+  }
+  
+  // Detect OS (Mac uses metaKey, Windows/Linux uses ctrlKey)
+  const cmdKey = navigator.platform.includes('Mac') ? e.metaKey : e.ctrlKey;
+  
+  // Check each shortcut
+  for (const [name, shortcut] of Object.entries(KEYBOARD_SHORTCUTS)) {
+    const keyMatch = e.key.toLowerCase() === shortcut.key.toLowerCase();
+    const cmdMatch = shortcut.cmd ? cmdKey : !cmdKey;
+    const shiftMatch = shortcut.shift ? e.shiftKey : !e.shiftKey;
+    
+    if (keyMatch && cmdMatch && shiftMatch) {
+      e.preventDefault();
+      handleShortcutAction(shortcut.action, e);
+      showShortcutIndicator(name);
+      console.log("GrayTool: Keyboard shortcut triggered:", name);
+      break;
+    }
+  }
+});
+
+// Handle shortcut actions
+function handleShortcutAction(action, event) {
+  switch (action) {
+    case 'quickSearch':
+      focusSearchInput();
+      break;
+    case 'copyAsJson':
+      copyCurrentLogAsJson();
+      break;
+    case 'exportLog':
+      exportCurrentLog();
+      break;
+    case 'showShortcuts':
+      showKeyboardShortcutsHelp();
+      break;
+    case 'closePopup':
+      closeCurrentPopup();
+      break;
+    case 'toggleFilter':
+      toggleFilterMenu();
+      break;
+  }
+}
+
+// Show shortcut indicator
+function showShortcutIndicator(shortcutName) {
+  const indicator = document.createElement('div');
+  indicator.className = 'graytool-shortcut-indicator';
+  indicator.textContent = `⌨️ ${shortcutName}`;
+  document.body.appendChild(indicator);
+  
+  setTimeout(() => {
+    if (indicator.parentNode) {
+      indicator.parentNode.removeChild(indicator);
+    }
+  }, 2000);
+}
+
+// Focus search input
+function focusSearchInput() {
+  const searchInput = document.querySelector('input[placeholder*="Search"]') || 
+                      document.querySelector('input[type="search"]') ||
+                      document.querySelector('.query-input input');
+  
+  if (searchInput) {
+    searchInput.focus();
+    searchInput.select();
+    showNotification('Search input focused', 'info');
+  } else {
+    showNotification('Search input not found', 'error');
+  }
+}
+
+// Copy current log as JSON
+function copyCurrentLogAsJson() {
+  // Try to find the most recently opened popup's content
+  const popupContent = document.querySelector('.graytool-popup-content');
+  
+  if (popupContent && currentOpenPopup) {
+    copyToClipboard(currentOpenPopup.rawContent).then(() => {
+      showNotification('Log copied as JSON!', 'success');
+    }).catch(() => {
+      showNotification('Failed to copy log', 'error');
+    });
+  } else {
+    showNotification('No log popup open', 'error');
+  }
+}
+
+// Export current log
+function exportCurrentLog() {
+  if (currentOpenPopup && currentOpenPopup.rawContent) {
+    const blob = new Blob([currentOpenPopup.rawContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `graylog-export-${new Date().getTime()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Log exported!', 'success');
+  } else {
+    showNotification('No log to export', 'error');
+  }
+}
+
+// Close current popup
+function closeCurrentPopup() {
+  const popup = document.querySelector('.graytool-popup-overlay');
+  if (popup) {
+    popup.remove();
+    currentOpenPopup = null;
+    console.log("GrayTool: Popup closed via keyboard shortcut");
+  }
+}
+
+// Toggle filter menu
+function toggleFilterMenu() {
+  // Find Graylog's filter menu and toggle it
+  const filterButton = document.querySelector('[data-testid="filter-button"]') ||
+                       document.querySelector('.filter-button') ||
+                       document.querySelector('button[title*="Filter"]');
+  
+  if (filterButton) {
+    filterButton.click();
+    showNotification('Filter menu toggled', 'info');
+  } else {
+    showNotification('Filter menu not found', 'error');
+  }
+}
+
+// Show keyboard shortcuts help
+function showKeyboardShortcutsHelp() {
+  // Remove existing shortcuts popup
+  const existingPopup = document.querySelector('.graytool-shortcuts-help-overlay');
+  if (existingPopup) {
+    existingPopup.remove();
+    return;
+  }
+  
+  const overlay = document.createElement('div');
+  overlay.className = 'graytool-popup-overlay graytool-shortcuts-help-overlay';
+  
+  const popup = document.createElement('div');
+  popup.className = 'graytool-shortcuts-popup';
+  
+  const header = document.createElement('div');
+  header.className = 'graytool-shortcuts-header';
+  header.innerHTML = '<div class="graytool-shortcuts-title">⌨️ Keyboard Shortcuts</div>';
+  
+  const content = document.createElement('div');
+  content.className = 'graytool-shortcuts-content';
+  
+  // Detect OS for display
+  const isMac = navigator.platform.includes('Mac');
+  const cmdSymbol = isMac ? '⌘' : 'Ctrl';
+  
+  // Build shortcuts list
+  Object.entries(KEYBOARD_SHORTCUTS).forEach(([name, shortcut]) => {
+    const item = document.createElement('div');
+    item.className = 'graytool-shortcut-item';
+    
+    const description = document.createElement('div');
+    description.className = 'graytool-shortcut-description';
+    description.textContent = shortcut.description;
+    
+    const keys = document.createElement('div');
+    keys.className = 'graytool-shortcut-keys';
+    
+    // Parse shortcut name
+    const parts = name.split('+');
+    parts.forEach(part => {
+      const key = document.createElement('span');
+      key.className = 'graytool-shortcut-key';
+      
+      if (part === 'CMD') {
+        key.textContent = cmdSymbol;
+      } else if (part === 'SHIFT') {
+        key.textContent = '⇧';
+      } else if (part === 'ESC') {
+        key.textContent = 'Esc';
+      } else {
+        key.textContent = part;
+      }
+      
+      keys.appendChild(key);
+    });
+    
+    item.appendChild(description);
+    item.appendChild(keys);
+    content.appendChild(item);
+  });
+  
+  const footer = document.createElement('div');
+  footer.className = 'graytool-shortcuts-footer';
+  footer.textContent = 'Press Cmd+/ or Esc to close';
+  
+  popup.appendChild(header);
+  popup.appendChild(content);
+  popup.appendChild(footer);
+  overlay.appendChild(popup);
+  document.body.appendChild(overlay);
+  
+  // Close handlers
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.remove();
+    }
+  });
+  
+  console.log("GrayTool: Keyboard shortcuts help shown");
+}
 
 // JSON formatter with interactive expand/collapse functionality
 function formatJSON(obj, indent = 0, path = '') {
@@ -800,6 +1338,325 @@ function applyGraylogFilter(fieldName, fieldValue, type = 'include') {
   }
 }
 
+// Log Context Viewer
+function showLogContextViewer(parsedContent, rawContent) {
+  console.log("GrayTool: Showing Log Context Viewer");
+  
+  // Create popup overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'graytool-popup-overlay';
+  
+  const popupContent = document.createElement('div');
+  popupContent.className = 'graytool-popup-content';
+  popupContent.style.maxWidth = '900px';
+  
+  // Create header
+  const header = document.createElement('div');
+  header.className = 'graytool-popup-header';
+  
+  const title = document.createElement('div');
+  title.className = 'graytool-popup-title';
+  title.textContent = '📊 Log Context Viewer';
+  
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.gap = '8px';
+  
+  const closeButton = document.createElement('button');
+  closeButton.className = 'graytool-close-btn';
+  closeButton.textContent = 'Close';
+  closeButton.style.minWidth = '80px';
+  closeButton.style.height = '32px';
+  
+  buttonContainer.appendChild(closeButton);
+  header.appendChild(title);
+  header.appendChild(buttonContainer);
+  
+  // Create context viewer container
+  const contextViewer = document.createElement('div');
+  contextViewer.className = 'graytool-context-viewer';
+  
+  // Show loading state
+  contextViewer.innerHTML = '<div class="graytool-context-loading">🔄 Loading context logs...</div>';
+  
+  // Assemble popup
+  popupContent.appendChild(header);
+  popupContent.appendChild(contextViewer);
+  overlay.appendChild(popupContent);
+  document.body.appendChild(overlay);
+  
+  // Close button handler
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(overlay);
+  });
+  
+  // Close on overlay click
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+  
+  // ESC key support
+  const handleEsc = (e) => {
+    if (e.key === 'Escape') {
+      document.body.removeChild(overlay);
+      document.removeEventListener('keydown', handleEsc);
+    }
+  };
+  document.addEventListener('keydown', handleEsc);
+  
+  // Fetch context logs
+  fetchContextLogs(parsedContent, rawContent).then(contextData => {
+    renderContextViewer(contextViewer, contextData, parsedContent);
+  }).catch(error => {
+    console.error("GrayTool: Failed to fetch context logs:", error);
+    contextViewer.innerHTML = `
+      <div class="graytool-context-error">
+        <strong>⚠️ Failed to fetch context logs</strong><br>
+        ${error.message || 'Unable to load surrounding logs from Graylog'}
+      </div>
+    `;
+  });
+}
+
+// Fetch context logs from Graylog
+async function fetchContextLogs(parsedContent, rawContent) {
+  // Extract timestamp from parsed content
+  const timestamp = parsedContent.timestamp || parsedContent.time || parsedContent['@timestamp'];
+  
+  if (!timestamp) {
+    throw new Error('No timestamp found in log entry');
+  }
+  
+  // For now, return mock data (will integrate with actual Graylog API later)
+  // In production, this would fetch from Graylog's API
+  return generateMockContextLogs(parsedContent, timestamp);
+}
+
+// Generate mock context logs for demonstration
+function generateMockContextLogs(currentLog, timestamp) {
+  const logs = [];
+  const currentTime = new Date(timestamp).getTime();
+  
+  // Generate 5 logs before
+  for (let i = 5; i > 0; i--) {
+    logs.push({
+      timestamp: new Date(currentTime - (i * 10000)).toISOString(),
+      level: ['INFO', 'DEBUG', 'WARN'][Math.floor(Math.random() * 3)],
+      message: `Log entry ${i} before current log`,
+      source: currentLog.source || 'app',
+      isCurrent: false
+    });
+  }
+  
+  // Add current log
+  logs.push({
+    timestamp: timestamp,
+    level: currentLog.level_name || currentLog.level || 'INFO',
+    message: currentLog.message || currentLog.msg || 'Current log entry',
+    source: currentLog.source || 'app',
+    isCurrent: true
+  });
+  
+  // Generate 5 logs after
+  for (let i = 1; i <= 5; i++) {
+    logs.push({
+      timestamp: new Date(currentTime + (i * 10000)).toISOString(),
+      level: ['INFO', 'DEBUG'][Math.floor(Math.random() * 2)],
+      message: `Log entry ${i} after current log`,
+      source: currentLog.source || 'app',
+      isCurrent: false
+    });
+  }
+  
+  return {
+    before: logs.slice(0, 5),
+    current: logs[5],
+    after: logs.slice(6)
+  };
+}
+
+// Render context viewer with logs
+function renderContextViewer(container, contextData, originalLog) {
+  container.innerHTML = '';
+  
+  // Before section
+  if (contextData.before && contextData.before.length > 0) {
+    const beforeSection = document.createElement('div');
+    beforeSection.className = 'graytool-context-section';
+    beforeSection.innerHTML = '<div class="graytool-context-header">⬆️ Before (5 logs)</div>';
+    
+    contextData.before.forEach(log => {
+      beforeSection.appendChild(createLogEntry(log));
+    });
+    
+    container.appendChild(beforeSection);
+  }
+  
+  // Current log section
+  const currentSection = document.createElement('div');
+  currentSection.className = 'graytool-context-section';
+  currentSection.innerHTML = '<div class="graytool-context-header">📍 Current Log</div>';
+  currentSection.appendChild(createLogEntry(contextData.current));
+  container.appendChild(currentSection);
+  
+  // After section
+  if (contextData.after && contextData.after.length > 0) {
+    const afterSection = document.createElement('div');
+    afterSection.className = 'graytool-context-section';
+    afterSection.innerHTML = '<div class="graytool-context-header">⬇️ After (5 logs)</div>';
+    
+    contextData.after.forEach(log => {
+      afterSection.appendChild(createLogEntry(log));
+    });
+    
+    container.appendChild(afterSection);
+  }
+}
+
+// Create a log entry element
+function createLogEntry(log) {
+  const logDiv = document.createElement('div');
+  logDiv.className = 'graytool-context-log' + (log.isCurrent ? ' current' : '');
+  
+  const timeStr = new Date(log.timestamp).toLocaleTimeString('en-US', { 
+    hour12: false,
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    fractionalSecondDigits: 3
+  });
+  
+  logDiv.innerHTML = `
+    <div>
+      <span class="graytool-context-log-time">${timeStr}</span>
+      <span class="graytool-context-log-level ${log.level}">${log.level}</span>
+      ${log.source ? `<span style="color: #9cdcfe;">[${log.source}]</span>` : ''}
+    </div>
+    <div class="graytool-context-log-message">${escapeHtml(log.message)}</div>
+  `;
+  
+  // Make log clickable to show details
+  if (!log.isCurrent) {
+    logDiv.addEventListener('click', () => {
+      showNotification('Clicked on context log - detail view coming soon!', 'info');
+    });
+  }
+  
+  return logDiv;
+}
+
+// Generate Info Tab Content
+function generateInfoTabContent(parsedContent) {
+  const isMac = navigator.platform.includes('Mac');
+  const cmdSymbol = isMac ? '⌘' : 'Ctrl';
+  
+  return `
+    <div class="graytool-info-section">
+      <div class="graytool-info-title">⌨️ Keyboard Shortcuts</div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Quick Search (focus search input)</div>
+        <div class="graytool-info-value">${cmdSymbol}+K</div>
+      </div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Copy current log as JSON</div>
+        <div class="graytool-info-value">${cmdSymbol}+Shift+C</div>
+      </div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Export current log</div>
+        <div class="graytool-info-value">${cmdSymbol}+E</div>
+      </div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Show keyboard shortcuts help</div>
+        <div class="graytool-info-value">${cmdSymbol}+/</div>
+      </div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Close popup</div>
+        <div class="graytool-info-value">Esc</div>
+      </div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Toggle filter menu</div>
+        <div class="graytool-info-value">${cmdSymbol}+Shift+F</div>
+      </div>
+      
+      <div class="graytool-info-description">
+        💡 <strong>Tip:</strong> Use these keyboard shortcuts to navigate Graylog faster. 
+        Press ${cmdSymbol}+/ anywhere to see the full shortcuts help popup.
+      </div>
+    </div>
+    
+    <div class="graytool-info-section">
+      <div class="graytool-info-title">🎯 Smart Filter Generator</div>
+      
+      <div class="graytool-info-description">
+        <strong>Right-click</strong> on any JSON field name or value in the JSON View tab to:
+        <br><br>
+        • 🔍 <strong>Filter by:</strong> Add field to Graylog search query<br>
+        • 🚫 <strong>Exclude:</strong> Exclude field from results<br>
+        • 📋 <strong>Copy:</strong> Copy field name or value<br>
+        • 🔗 <strong>Copy as query:</strong> Generate Graylog query syntax<br>
+        <br>
+        Example: Right-click on "level": "ERROR" → Filter by: level = ERROR
+      </div>
+    </div>
+    
+    <div class="graytool-info-section">
+      <div class="graytool-info-title">📊 Log Context Viewer</div>
+      
+      <div class="graytool-info-description">
+        Click the <strong>📊 Context</strong> button to view surrounding logs:
+        <br><br>
+        • ⬆️ <strong>Before:</strong> 5 logs before current log<br>
+        • 📍 <strong>Current:</strong> Highlighted current log<br>
+        • ⬇️ <strong>After:</strong> 5 logs after current log<br>
+        <br>
+        Helps understand the context and timeline of events.
+      </div>
+    </div>
+    
+    <div class="graytool-info-section">
+      <div class="graytool-info-title">🎫 Quick Actions</div>
+      
+      <div class="graytool-info-description">
+        Click <strong>Quick Actions ▼</strong> to access:
+        <br><br>
+        • 🎫 <strong>Create JIRA Ticket:</strong> Generate pre-filled JIRA ticket template<br>
+        • 🤖 <strong>AI Analyse:</strong> Copy structured prompt for AI analysis<br>
+        • 🔗 <strong>Copy Permalink:</strong> Generate shareable log link<br>
+        <br>
+        Configure JIRA URL in extension settings for direct integration.
+      </div>
+    </div>
+    
+    <div class="graytool-info-section">
+      <div class="graytool-info-title">ℹ️ About GrayTool</div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Version</div>
+        <div class="graytool-info-value">1.0.0</div>
+      </div>
+      
+      <div class="graytool-info-item">
+        <div class="graytool-info-label">Developer</div>
+        <div class="graytool-info-value">Emre Bozkurt</div>
+      </div>
+      
+      <div class="graytool-info-description">
+        GrayTool is a powerful Chrome extension that enhances your Graylog experience 
+        with advanced features like Smart Filters, Context Viewer, Keyboard Shortcuts, 
+        and Quick Actions. Built to boost developer productivity and streamline log analysis.
+      </div>
+    </div>
+  `;
+}
+
 // Toggle function for JSON nodes (removed - now using event delegation)
 
 // Show message detail popup
@@ -809,6 +1666,9 @@ function showMessageDetailPopup(messageText) {
   // Parse message content
   let parsedContent;
   let rawContent = messageText;
+  
+  // Store for keyboard shortcuts
+  currentOpenPopup = { rawContent, parsedContent: null };
   
   try {
     if (messageText.startsWith('{') && messageText.endsWith('}')) {
@@ -822,6 +1682,9 @@ function showMessageDetailPopup(messageText) {
       rawMessage: messageText 
     };
   }
+  
+  // Update stored parsed content
+  currentOpenPopup.parsedContent = parsedContent;
   
   // Create popup overlay
   const overlay = document.createElement('div');
@@ -856,6 +1719,12 @@ function showMessageDetailPopup(messageText) {
   quickActionsButton.style.minWidth = '120px';
   quickActionsButton.style.height = '32px';
   
+  const contextButton = document.createElement('button');
+  contextButton.className = 'graytool-context-btn';
+  contextButton.textContent = 'Context';
+  contextButton.style.minWidth = '100px';
+  contextButton.style.height = '32px';
+  
   const closeButton = document.createElement('button');
   closeButton.className = 'graytool-close-btn';
   closeButton.textContent = 'Close';
@@ -864,6 +1733,7 @@ function showMessageDetailPopup(messageText) {
   
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(quickActionsButton);
+  buttonContainer.appendChild(contextButton);
   buttonContainer.appendChild(closeButton);
   header.appendChild(title);
   header.appendChild(buttonContainer);
@@ -925,6 +1795,10 @@ function showMessageDetailPopup(messageText) {
       quickActionsDropdown.style.display = isVisible ? 'none' : 'block';
       e.target.textContent = isVisible ? 'Quick Actions ▼' : 'Quick Actions ▲';
       console.log("GrayTool: Toggled Quick Actions dropdown:", !isVisible ? 'opened' : 'closed');
+    } else if (e.target.classList.contains('graytool-context-btn')) {
+      // Show Log Context Viewer
+      showLogContextViewer(parsedContent, rawContent);
+      console.log("GrayTool: Opened Log Context Viewer");
     } else if (e.target.classList.contains('graytool-close-btn')) {
       document.body.removeChild(overlay);
       document.removeEventListener('keydown', handleEscapeKey);

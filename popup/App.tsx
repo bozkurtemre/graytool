@@ -4,6 +4,7 @@ import ButtonList from "./components/ButtonList";
 import BaseUrlForm from "./components/BaseUrlForm";
 import Settings from "./components/Settings";
 import EnvironmentManager, { EnvironmentConfig } from "./components/EnvironmentManager";
+import InfoTab from "./components/InfoTab";
 
 // Chrome extension API access
 const getChromeAPI = () => {
@@ -64,7 +65,7 @@ function AppContent() {
   const [jiraUrl, setJiraUrl] = useState<string>("");
   const [environments, setEnvironments] = useState<EnvironmentConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentPage, setCurrentPage] = useState<'buttons' | 'settings'>('buttons');
+  const [currentPage, setCurrentPage] = useState<'buttons' | 'settings' | 'info'>('buttons');
 
   useEffect(() => {
     // Check if chrome APIs are available
@@ -140,7 +141,7 @@ function AppContent() {
           )}
         </button>
         <button
-          className={`flex-1 py-2 px-3 rounded-r text-sm font-medium ${
+          className={`flex-1 py-2 px-3 text-sm font-medium ${
             currentPage === 'settings' 
               ? 'bg-blue-600 text-white' 
               : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -148,6 +149,16 @@ function AppContent() {
           onClick={() => setCurrentPage('settings')}
         >
           ⚙️ Settings
+        </button>
+        <button
+          className={`flex-1 py-2 px-3 rounded-r text-sm font-medium ${
+            currentPage === 'info' 
+              ? 'bg-blue-600 text-white' 
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+          onClick={() => setCurrentPage('info')}
+        >
+          ℹ️ Info
         </button>
       </div>
 
@@ -158,11 +169,16 @@ function AppContent() {
           <ButtonForm buttons={buttons} saveButtons={saveButtons} />
           <ButtonList buttons={buttons} saveButtons={saveButtons} baseUrl={baseUrl} />
         </>
-      ) : (
+      ) : currentPage === 'settings' ? (
         <>
           <h1 className="text-xl font-bold mb-4">Settings</h1>
           <EnvironmentManager environments={environments} saveEnvironments={saveEnvironments} />
           <Settings buttons={buttons} saveButtons={saveButtons} baseUrl={baseUrl} saveBaseUrl={saveBaseUrl} jiraUrl={jiraUrl} saveJiraUrl={saveJiraUrl} environments={environments} saveEnvironments={saveEnvironments} />
+        </>
+      ) : (
+        <>
+          <h1 className="text-xl font-bold mb-4">ℹ️ Info & Help</h1>
+          <InfoTab />
         </>
       )}
     </div>
