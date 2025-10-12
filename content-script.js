@@ -189,6 +189,70 @@ const popupStyles = `
   .graytool-quick-actions-btn:hover {
     background: #1177bb;
   }
+  
+  /* Context Menu Styles */
+  .graytool-context-menu {
+    position: fixed;
+    background: #2d2d2d;
+    border: 1px solid #454545;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    z-index: 10002;
+    min-width: 180px;
+    padding: 4px 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  
+  .graytool-context-menu-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    color: #cccccc;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.15s ease;
+  }
+  
+  .graytool-context-menu-item:hover {
+    background: #3e3e42;
+    color: #ffffff;
+  }
+  
+  .graytool-context-menu-item.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .graytool-context-menu-item.disabled:hover {
+    background: transparent;
+    color: #cccccc;
+  }
+  
+  .graytool-context-menu-separator {
+    height: 1px;
+    background: #454545;
+    margin: 4px 0;
+  }
+  
+  .json-key-clickable {
+    cursor: pointer;
+    position: relative;
+  }
+  
+  .json-key-clickable:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+  }
+  
+  .json-value-clickable {
+    cursor: pointer;
+  }
+  
+  .json-value-clickable:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+  }
 `;
 
 // Inject styles
@@ -243,9 +307,24 @@ ${spaces}<span class="json-punctuation">]</span>`;
     const containerId = `object-${uniqueId}`;
     const toggleId = `toggle-${uniqueId}`;
     
-    const items = keys.map(key => 
-      `${spaces}  <span class="json-key">"${escapeHtml(key)}"</span><span class="json-punctuation">:</span> ${formatJSON(obj[key], indent + 1, `${path}.${key}`)}`
-    ).join('<span class="json-punctuation">,</span>\n');
+    const items = keys.map(key => {
+      const value = obj[key];
+      const valueType = typeof value;
+      const fullPath = path ? `${path}.${key}` : key;
+      
+      // Make key and primitive values clickable for filtering
+      const clickableKey = `<span class="json-key json-key-clickable" data-field-name="${escapeHtml(key)}" data-field-path="${escapeHtml(fullPath)}">"${escapeHtml(key)}"</span>`;
+      
+      let formattedValue;
+      if (value === null || valueType === 'string' || valueType === 'number' || valueType === 'boolean') {
+        const valueStr = formatJSON(value, indent + 1, fullPath);
+        formattedValue = `<span class="json-value-clickable" data-field-name="${escapeHtml(key)}" data-field-value="${escapeHtml(String(value))}" data-field-path="${escapeHtml(fullPath)}">${valueStr}</span>`;
+      } else {
+        formattedValue = formatJSON(value, indent + 1, fullPath);
+      }
+      
+      return `${spaces}  ${clickableKey}<span class="json-punctuation">:</span> ${formattedValue}`;
+    }).join('<span class="json-punctuation">,</span>\n');
     
     return `<span class="json-toggle" data-container="${containerId}" data-toggle="${toggleId}">▼</span><span class="json-punctuation">{</span><span class="json-length"> // ${keys.length} keys</span>
 <div id="${containerId}" class="json-collapsible">${items}</div>
@@ -537,6 +616,190 @@ function showJiraTemplatePopup(template, summary) {
   document.addEventListener('keydown', handleEsc);
 }
 
+// Helper function to get value from parsed content by field name
+function getValueFromParsedContent(obj, fieldName) {
+  if (!obj || typeof obj !== 'object') return null;
+  
+  // Direct property access
+  if (obj.hasOwnProperty(fieldName)) {
+    const value = obj[fieldName];
+    // Convert to string for filtering (but keep original type info)
+    if (value === null) return 'null';
+    if (typeof value === 'object') return null; // Don't filter complex objects
+    return String(value);
+  }
+  
+  // Search in nested objects (shallow search only)
+  for (const key in obj) {
+    if (obj.hasOwnProperty(key) && typeof obj[key] === 'object' && obj[key] !== null) {
+      if (obj[key].hasOwnProperty(fieldName)) {
+        const value = obj[key][fieldName];
+        if (value === null) return 'null';
+        if (typeof value === 'object') return null;
+        return String(value);
+      }
+    }
+  }
+  
+  return null;
+}
+
+// Smart Filter Generator - Context Menu
+function showFilterContextMenu(event, fieldName, fieldValue, fieldPath) {
+  event.preventDefault();
+  
+  // Remove existing context menu
+  const existingMenu = document.querySelector('.graytool-context-menu');
+  if (existingMenu) {
+    existingMenu.remove();
+  }
+  
+  // Create context menu
+  const menu = document.createElement('div');
+  menu.className = 'graytool-context-menu';
+  menu.style.left = event.pageX + 'px';
+  menu.style.top = event.pageY + 'px';
+  
+  // Prepare display values
+  const displayValue = fieldValue ? (fieldValue.length > 20 ? fieldValue.substring(0, 20) + '...' : fieldValue) : '';
+  
+  // Menu items
+  const menuItems = [
+    {
+      icon: '🔍',
+      label: fieldValue ? `Filter by: ${fieldName} = ${displayValue}` : `Filter by: ${fieldName}`,
+      action: () => applyGraylogFilter(fieldName, fieldValue, 'include'),
+      disabled: !fieldValue
+    },
+    {
+      icon: '🚫',
+      label: fieldValue ? `Exclude: ${fieldName} = ${displayValue}` : `Exclude: ${fieldName}`,
+      action: () => applyGraylogFilter(fieldName, fieldValue, 'exclude'),
+      disabled: !fieldValue
+    },
+    { separator: true },
+    {
+      icon: '📋',
+      label: 'Copy field name',
+      action: () => {
+        copyToClipboard(fieldName).then(() => {
+          showNotification(`Copied: ${fieldName}`, 'success');
+        });
+      }
+    },
+    {
+      icon: '📄',
+      label: 'Copy value',
+      action: () => {
+        copyToClipboard(String(fieldValue)).then(() => {
+          showNotification(`Copied: ${fieldValue}`, 'success');
+        });
+      },
+      disabled: !fieldValue
+    },
+    {
+      icon: '🔗',
+      label: 'Copy as query',
+      action: () => {
+        const query = generateGraylogQuery(fieldName, fieldValue, 'include');
+        copyToClipboard(query).then(() => {
+          showNotification('Query copied to clipboard!', 'success');
+        });
+      },
+      disabled: !fieldValue
+    }
+  ];
+  
+  // Build menu
+  menuItems.forEach(item => {
+    if (item.separator) {
+      const separator = document.createElement('div');
+      separator.className = 'graytool-context-menu-separator';
+      menu.appendChild(separator);
+    } else {
+      const menuItem = document.createElement('div');
+      menuItem.className = 'graytool-context-menu-item' + (item.disabled ? ' disabled' : '');
+      menuItem.innerHTML = `<span>${item.icon}</span><span>${item.label}</span>`;
+      
+      if (!item.disabled) {
+        menuItem.addEventListener('click', () => {
+          item.action();
+          menu.remove();
+        });
+      }
+      
+      menu.appendChild(menuItem);
+    }
+  });
+  
+  document.body.appendChild(menu);
+  
+  // Close menu on outside click
+  const closeMenu = (e) => {
+    if (!menu.contains(e.target)) {
+      menu.remove();
+      document.removeEventListener('click', closeMenu);
+    }
+  };
+  setTimeout(() => document.addEventListener('click', closeMenu), 0);
+  
+  console.log("GrayTool: Context menu shown for field:", fieldName);
+}
+
+// Generate Graylog query syntax
+function generateGraylogQuery(fieldName, fieldValue, type = 'include') {
+  if (!fieldValue) return '';
+  
+  let query;
+  const needsQuotes = String(fieldValue).includes(' ') || String(fieldValue).includes(':');
+  const formattedValue = needsQuotes ? `"${fieldValue}"` : fieldValue;
+  
+  if (type === 'exclude') {
+    query = `NOT ${fieldName}:${formattedValue}`;
+  } else {
+    query = `${fieldName}:${formattedValue}`;
+  }
+  
+  return query;
+}
+
+// Apply filter to Graylog search
+function applyGraylogFilter(fieldName, fieldValue, type = 'include') {
+  const query = generateGraylogQuery(fieldName, fieldValue, type);
+  
+  if (!query) {
+    showNotification('No value to filter', 'error');
+    return;
+  }
+  
+  // Try to find Graylog search input
+  const searchInput = document.querySelector('input[placeholder*="Search"]') || 
+                      document.querySelector('input[type="search"]') ||
+                      document.querySelector('.query-input input') ||
+                      document.querySelector('[data-testid="search-input"]');
+  
+  if (searchInput) {
+    // Get existing query
+    const existingQuery = searchInput.value.trim();
+    
+    // Combine with AND if there's existing query
+    const newQuery = existingQuery ? `${existingQuery} AND ${query}` : query;
+    
+    // Set new query
+    searchInput.value = newQuery;
+    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+    searchInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    showNotification(`Filter applied: ${query}`, 'success');
+    console.log("GrayTool: Applied filter:", query);
+  } else {
+    // Fallback: copy to clipboard
+    copyToClipboard(query).then(() => {
+      showNotification('Query copied! Paste in Graylog search.', 'info');
+    });
+  }
+}
+
 // Toggle function for JSON nodes (removed - now using event delegation)
 
 // Show message detail popup
@@ -690,6 +953,23 @@ function showMessageDetailPopup(messageText) {
         
         console.log("GrayTool: Toggled JSON node:", containerId, isCollapsed ? 'expanded' : 'collapsed');
       }
+    }
+  });
+  
+  // Add Smart Filter context menu for JSON fields
+  jsonContainer.addEventListener('contextmenu', (e) => {
+    // Check if right-click is on a clickable key or value
+    if (e.target.classList.contains('json-key-clickable') || e.target.classList.contains('json-value-clickable')) {
+      const fieldName = e.target.getAttribute('data-field-name');
+      let fieldValue = e.target.getAttribute('data-field-value');
+      const fieldPath = e.target.getAttribute('data-field-path');
+      
+      // If key was clicked (no value), try to get value from parsedContent
+      if (!fieldValue && fieldName && parsedContent) {
+        fieldValue = getValueFromParsedContent(parsedContent, fieldName);
+      }
+      
+      showFilterContextMenu(e, fieldName, fieldValue, fieldPath);
     }
   });
   
