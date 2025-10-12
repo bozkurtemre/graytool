@@ -61,6 +61,7 @@ export interface ButtonConfig {
 function AppContent() {
   const [buttons, setButtons] = useState<ButtonConfig[]>([]);
   const [baseUrl, setBaseUrl] = useState<string>("");
+  const [jiraUrl, setJiraUrl] = useState<string>("");
   const [environments, setEnvironments] = useState<EnvironmentConfig[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState<'buttons' | 'settings'>('buttons');
@@ -69,9 +70,10 @@ function AppContent() {
     // Check if chrome APIs are available
     const chrome = getChromeAPI();
     if (chrome && chrome.storage) {
-      chrome.storage.sync.get(["buttons", "adminBaseUrl", "environments"], (result: { buttons?: ButtonConfig[]; adminBaseUrl?: string; environments?: EnvironmentConfig[] }) => {
+      chrome.storage.sync.get(["buttons", "adminBaseUrl", "jiraUrl", "environments"], (result: { buttons?: ButtonConfig[]; adminBaseUrl?: string; jiraUrl?: string; environments?: EnvironmentConfig[] }) => {
         setButtons(result.buttons || []);
         setBaseUrl(result.adminBaseUrl || "");
+        setJiraUrl(result.jiraUrl || "");
         setEnvironments(result.environments || []);
         setIsLoading(false);
       });
@@ -94,6 +96,13 @@ function AppContent() {
     const chrome = getChromeAPI();
     if (chrome && chrome.storage) {
       chrome.storage.sync.set({ adminBaseUrl: url }, () => setBaseUrl(url));
+    }
+  };
+
+  const saveJiraUrl = (url: string) => {
+    const chrome = getChromeAPI();
+    if (chrome && chrome.storage) {
+      chrome.storage.sync.set({ jiraUrl: url }, () => setJiraUrl(url));
     }
   };
 
@@ -153,7 +162,7 @@ function AppContent() {
         <>
           <h1 className="text-xl font-bold mb-4">Settings</h1>
           <EnvironmentManager environments={environments} saveEnvironments={saveEnvironments} />
-          <Settings buttons={buttons} saveButtons={saveButtons} baseUrl={baseUrl} saveBaseUrl={saveBaseUrl} environments={environments} saveEnvironments={saveEnvironments} />
+          <Settings buttons={buttons} saveButtons={saveButtons} baseUrl={baseUrl} saveBaseUrl={saveBaseUrl} jiraUrl={jiraUrl} saveJiraUrl={saveJiraUrl} environments={environments} saveEnvironments={saveEnvironments} />
         </>
       )}
     </div>

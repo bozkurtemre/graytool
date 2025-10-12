@@ -8,11 +8,13 @@ interface Props {
   saveButtons: (buttons: ButtonConfig[]) => void;
   baseUrl: string;
   saveBaseUrl: (url: string) => void;
+  jiraUrl: string;
+  saveJiraUrl: (url: string) => void;
   environments: EnvironmentConfig[];
   saveEnvironments: (envs: EnvironmentConfig[]) => void;
 }
 
-export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, environments, saveEnvironments }: Props) {
+export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, jiraUrl, saveJiraUrl, environments, saveEnvironments }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
@@ -21,6 +23,7 @@ export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, e
       exported: new Date().toISOString(),
       buttons: buttons,
       adminBaseUrl: baseUrl,
+      jiraUrl: jiraUrl,
       environments: environments.map(env => ({
         name: env.name,
         adminBaseUrl: env.adminBaseUrl,
@@ -85,8 +88,9 @@ export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, e
           }
         }
 
-        // Import admin base URL and environments if available
+        // Import admin base URL, JIRA URL and environments if available
         const importBaseUrl = importData.adminBaseUrl || '';
+        const importJiraUrl = importData.jiraUrl || '';
         const rawEnvironments = importData.environments || [];
         
         // Clean up environments - remove graylogPattern if exists
@@ -99,6 +103,7 @@ export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, e
         // Confirm replacement
         let confirmMessage = `Import ${validButtons.length} button(s)`;
         if (importBaseUrl) confirmMessage += ', admin base URL';
+        if (importJiraUrl) confirmMessage += ', JIRA URL';
         if (importEnvironments.length > 0) confirmMessage += `, ${importEnvironments.length} environment(s)`;
         
         if (buttons.length > 0 || environments.length > 0) {
@@ -111,12 +116,16 @@ export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, e
           if (importBaseUrl) {
             saveBaseUrl(importBaseUrl);
           }
+          if (importJiraUrl) {
+            saveJiraUrl(importJiraUrl);
+          }
           if (importEnvironments.length > 0) {
             saveEnvironments(importEnvironments);
           }
           
           let successMessage = `Successfully imported ${validButtons.length} button(s)`;
           if (importBaseUrl) successMessage += ' and admin base URL';
+          if (importJiraUrl) successMessage += ' and JIRA URL';
           if (importEnvironments.length > 0) successMessage += ` and ${importEnvironments.length} environment(s)`;
           
           alert(successMessage);
@@ -140,6 +149,24 @@ export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, e
     <div className="bg-white p-4 rounded shadow mb-4">
       <h2 className="font-semibold mb-3">Settings</h2>
       
+      {/* JIRA URL Configuration */}
+      <div className="mb-4 pb-4 border-b border-gray-200">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          🎫 JIRA Base URL
+        </label>
+        <input
+          type="text"
+          value={jiraUrl}
+          onChange={(e) => saveJiraUrl(e.target.value)}
+          placeholder="https://your-company.atlassian.net"
+          className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Enter your JIRA instance URL for Quick Actions integration
+        </p>
+      </div>
+      
+      {/* Export/Import Section */}
       <div className="flex gap-2 mb-2">
         <button
           onClick={handleExport}
@@ -165,6 +192,7 @@ export default function Settings({ buttons, saveButtons, baseUrl, saveBaseUrl, e
       <div className="text-xs text-gray-500">
         Current config: {buttons.length} button(s) • {environments.length} environment(s)
         {baseUrl && <span> • Manual admin URL set</span>}
+        {jiraUrl && <span> • JIRA URL configured</span>}
       </div>
 
       <input
