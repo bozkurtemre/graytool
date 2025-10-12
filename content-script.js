@@ -694,8 +694,8 @@ function exportCurrentLog() {
 // Close current popup
 function closeCurrentPopup() {
   const popup = document.querySelector('.graytool-popup-overlay');
-  if (popup) {
-    popup.remove();
+  if (popup && popup.parentNode) {
+    popup.parentNode.removeChild(popup);
     currentOpenPopup = null;
     console.log("GrayTool: Popup closed via keyboard shortcut");
   }
@@ -791,7 +791,9 @@ function showKeyboardShortcutsHelp() {
   // Close handlers
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
-      overlay.remove();
+      if (overlay && overlay.parentNode) {
+        overlay.parentNode.removeChild(overlay);
+      }
     }
   });
   
@@ -1135,19 +1137,25 @@ function showJiraTemplatePopup(template, summary) {
   });
   
   closeButton.addEventListener('click', () => {
-    document.body.removeChild(overlay);
+    if (overlay && overlay.parentNode) {
+      document.body.removeChild(overlay);
+    }
   });
   
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+      }
     }
   });
   
   // ESC key support
   const handleEsc = (e) => {
     if (e.key === 'Escape') {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+      }
       document.removeEventListener('keydown', handleEsc);
     }
   };
@@ -1387,20 +1395,26 @@ function showLogContextViewer(parsedContent, rawContent) {
   
   // Close button handler
   closeButton.addEventListener('click', () => {
-    document.body.removeChild(overlay);
+    if (overlay && overlay.parentNode) {
+      document.body.removeChild(overlay);
+    }
   });
   
   // Close on overlay click
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+      }
     }
   });
   
   // ESC key support
   const handleEsc = (e) => {
     if (e.key === 'Escape') {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+      }
       document.removeEventListener('keydown', handleEsc);
     }
   };
@@ -1800,9 +1814,11 @@ function showMessageDetailPopup(messageText) {
       showLogContextViewer(parsedContent, rawContent);
       console.log("GrayTool: Opened Log Context Viewer");
     } else if (e.target.classList.contains('graytool-close-btn')) {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+        console.log("GrayTool: Closed popup");
+      }
       document.removeEventListener('keydown', handleEscapeKey);
-      console.log("GrayTool: Closed popup");
     }
   });
   
@@ -1850,18 +1866,22 @@ function showMessageDetailPopup(messageText) {
   // Close on overlay click
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+        console.log("GrayTool: Popup closed by overlay click");
+      }
       document.removeEventListener('keydown', handleEscapeKey);
-      console.log("GrayTool: Popup closed by overlay click");
     }
   });
   
   // Close on ESC key press
   const handleEscapeKey = (e) => {
     if (e.key === 'Escape' || e.keyCode === 27) {
-      document.body.removeChild(overlay);
+      if (overlay && overlay.parentNode) {
+        document.body.removeChild(overlay);
+        console.log("GrayTool: Popup closed with ESC key");
+      }
       document.removeEventListener('keydown', handleEscapeKey);
-      console.log("GrayTool: Popup closed with ESC key");
     }
   };
   
