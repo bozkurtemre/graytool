@@ -284,13 +284,42 @@ function handleQuickAction(action, rawContent, parsedContent) {
 // JIRA Ticket Creation
 function handleJiraTicket(rawContent, parsedContent) {
   const summary = extractErrorSummary(parsedContent);
-  const description = `Log Details:\n\`\`\`\n${rawContent.substring(0, 1000)}${rawContent.length > 1000 ? '...' : ''}\n\`\`\``;
+  const timestamp = parsedContent.timestamp || parsedContent.time || new Date().toISOString();
+  const level = parsedContent.level_name || parsedContent.level || "UNKNOWN";
+  const source = parsedContent.source || parsedContent.logger_name || "N/A";
   
-  // Create a basic JIRA URL (customizable)
-  const jiraUrl = `https://your-jira-instance.atlassian.net/secure/CreateIssue.jspa?pid=10000&issuetype=1&summary=${encodeURIComponent(summary)}&description=${encodeURIComponent(description)}`;
-  
-  window.open(jiraUrl, '_blank');
-  console.log("GrayTool: Opened JIRA ticket creation");
+  // Create structured JIRA ticket template
+  const jiraTemplate = `
+*Summary:* ${summary}
+
+*Description:*
+{code:json}
+${rawContent.substring(0, 2000)}${rawContent.length > 2000 ? '\n... (truncated)' : ''}
+{code}
+
+*Details:*
+* *Timestamp:* ${timestamp}
+* *Level:* ${level}
+* *Source:* ${source}
+* *Log Link:* ${window.location.href}
+
+*Steps to Reproduce:*
+1. [Add steps]
+2. [Add steps]
+
+*Expected Behavior:*
+[Describe expected behavior]
+
+*Actual Behavior:*
+[Describe actual behavior]
+
+*Additional Context:*
+[Add any additional context]
+`.trim();
+
+  // Show JIRA template popup
+  showJiraTemplatePopup(jiraTemplate, summary);
+  console.log("GrayTool: Showing JIRA ticket template");
 }
 
 // AI Analysis
@@ -393,6 +422,119 @@ function showNotification(message, type = "info") {
       notification.parentNode.removeChild(notification);
     }
   }, 3000);
+}
+
+// Show JIRA Template Popup
+function showJiraTemplatePopup(template, summary) {
+  const overlay = document.createElement('div');
+  overlay.className = 'graytool-popup-overlay';
+  
+  const popupContent = document.createElement('div');
+  popupContent.className = 'graytool-popup-content';
+  popupContent.style.maxWidth = '700px';
+  
+  const header = document.createElement('div');
+  header.className = 'graytool-popup-header';
+  
+  const title = document.createElement('div');
+  title.className = 'graytool-popup-title';
+  title.textContent = '🎫 JIRA Ticket Template';
+  
+  const buttonContainer = document.createElement('div');
+  buttonContainer.style.display = 'flex';
+  buttonContainer.style.gap = '8px';
+  
+  const copyButton = document.createElement('button');
+  copyButton.className = 'graytool-copy-btn';
+  copyButton.textContent = 'Copy Template';
+  copyButton.style.minWidth = '120px';
+  copyButton.style.height = '32px';
+  
+  const openJiraButton = document.createElement('button');
+  openJiraButton.className = 'graytool-copy-btn';
+  openJiraButton.textContent = 'Open JIRA';
+  openJiraButton.style.minWidth = '100px';
+  openJiraButton.style.height = '32px';
+  
+  const closeButton = document.createElement('button');
+  closeButton.className = 'graytool-close-btn';
+  closeButton.textContent = 'Close';
+  closeButton.style.minWidth = '80px';
+  closeButton.style.height = '32px';
+  
+  buttonContainer.appendChild(copyButton);
+  buttonContainer.appendChild(openJiraButton);
+  buttonContainer.appendChild(closeButton);
+  header.appendChild(title);
+  header.appendChild(buttonContainer);
+  
+  const instructionsDiv = document.createElement('div');
+  instructionsDiv.style.cssText = `
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    padding: 12px;
+    margin: 10px 0;
+    color: #d4d4d4;
+    font-size: 13px;
+  `;
+  instructionsDiv.innerHTML = `
+    <strong>📋 Instructions:</strong><br>
+    1. Click "Copy Template" to copy the JIRA ticket content<br>
+    2. Click "Open JIRA" to go to your JIRA instance<br>
+    3. Create a new issue and paste the template
+  `;
+  
+  const templateContainer = document.createElement('div');
+  templateContainer.className = 'graytool-json-container';
+  templateContainer.style.whiteSpace = 'pre-wrap';
+  templateContainer.style.maxHeight = '400px';
+  templateContainer.style.overflowY = 'auto';
+  templateContainer.textContent = template;
+  
+  popupContent.appendChild(header);
+  popupContent.appendChild(instructionsDiv);
+  popupContent.appendChild(templateContainer);
+  overlay.appendChild(popupContent);
+  document.body.appendChild(overlay);
+  
+  // Event handlers
+  copyButton.addEventListener('click', () => {
+    copyToClipboard(template).then(() => {
+      copyButton.textContent = 'Copied!';
+      setTimeout(() => copyButton.textContent = 'Copy Template', 2000);
+      showNotification("JIRA template copied to clipboard!", "success");
+    }).catch(() => {
+      showNotification("Failed to copy template", "error");
+    });
+  });
+  
+  openJiraButton.addEventListener('click', () => {
+    // Load JIRA URL from config or use default
+    chrome.storage.sync.get(['jiraUrl'], (result) => {
+      const jiraUrl = result.jiraUrl || 'https://your-company.atlassian.net';
+      window.open(jiraUrl + '/secure/CreateIssue!default.jspa', '_blank');
+    });
+  });
+  
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(overlay);
+  });
+  
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+  
+  // ESC key support
+  const handleEsc = (e) => {
+    if (e.key === 'Escape') {
+      document.body.removeChild(overlay);
+      document.removeEventListener('keydown', handleEsc);
+    }
+  };
+  document.addEventListener('keydown', handleEsc);
 }
 
 // Toggle function for JSON nodes (removed - now using event delegation)
@@ -508,6 +650,7 @@ function showMessageDetailPopup(messageText) {
       copyToClipboard(rawContent).then(() => {
         e.target.textContent = 'Copied!';
         setTimeout(() => e.target.textContent = 'Copy', 2000);
+        showNotification("Content copied to clipboard!", "success");
         console.log("GrayTool: Copied content to clipboard");
       }).catch((error) => {
         console.error("GrayTool: Failed to copy to clipboard:", error);
