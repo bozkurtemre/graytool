@@ -454,6 +454,126 @@ const popupStyles = `
     margin-top: 8px;
   }
   
+  /* DevTools Tab */
+  .graytool-devtools-container {
+    padding: 10px;
+  }
+  
+  .graytool-tool-section {
+    background: #1e1e1e;
+    border: 1px solid #404040;
+    border-radius: 6px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  
+  .graytool-tool-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: #569cd6;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    user-select: none;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+  }
+  
+  .graytool-tool-header:hover {
+    background: rgba(86, 156, 214, 0.1);
+  }
+  
+  .graytool-tool-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .graytool-tool-collapse-icon {
+    color: #858585;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+  }
+  
+  .graytool-tool-section.collapsed .graytool-tool-collapse-icon {
+    transform: rotate(-90deg);
+  }
+  
+  .graytool-tool-section.collapsed .graytool-tool-content {
+    display: none;
+  }
+  
+  .graytool-tool-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .graytool-tool-textarea {
+    width: 100%;
+    min-height: 120px;
+    background: #2d2d2d;
+    color: #cccccc;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    resize: vertical;
+  }
+  
+  .graytool-tool-textarea:focus {
+    outline: none;
+    border-color: #0e639c;
+  }
+  
+  .graytool-tool-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .graytool-tool-btn {
+    background: #0e639c;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s ease;
+  }
+  
+  .graytool-tool-btn:hover {
+    background: #1177bb;
+  }
+  
+  .graytool-tool-btn.secondary {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+  }
+  
+  .graytool-tool-btn.secondary:hover {
+    background: #3e3e42;
+  }
+  
+  .graytool-tool-result {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Monaco', 'Courier New', monospace;
+    font-size: 12px;
+    color: #9cdcfe;
+    max-height: 200px;
+    overflow-y: auto;
+    word-break: break-all;
+  }
+  
   /* Keyboard Shortcuts Help Popup */
   .graytool-shortcuts-popup {
     background: #2d2d2d;
@@ -1561,6 +1681,114 @@ function createLogEntry(log) {
   return logDiv;
 }
 
+// Handle DevTools actions
+function handleDevToolAction(action) {
+  const input = document.getElementById('json-escape-input');
+  const result = document.getElementById('json-escape-result');
+  
+  if (!input || !result) return;
+  
+  const inputValue = input.value.trim();
+  
+  switch (action) {
+    case 'escape':
+      if (!inputValue) {
+        result.textContent = 'Please enter some JSON to escape';
+        return;
+      }
+      try {
+        // Escape JSON: Convert to JSON string
+        const escaped = JSON.stringify(inputValue);
+        result.textContent = escaped;
+        showNotification('JSON escaped successfully!', 'success');
+        console.log("GrayTool: JSON escaped");
+      } catch (error) {
+        result.textContent = 'Error: ' + error.message;
+        showNotification('Failed to escape JSON', 'error');
+      }
+      break;
+      
+    case 'unescape':
+      if (!inputValue) {
+        result.textContent = 'Please enter escaped JSON to unescape';
+        return;
+      }
+      try {
+        // Unescape JSON: Parse escaped string
+        const unescaped = JSON.parse(inputValue);
+        result.textContent = typeof unescaped === 'string' ? unescaped : JSON.stringify(unescaped, null, 2);
+        showNotification('JSON unescaped successfully!', 'success');
+        console.log("GrayTool: JSON unescaped");
+      } catch (error) {
+        result.textContent = 'Error: ' + error.message;
+        showNotification('Failed to unescape JSON', 'error');
+      }
+      break;
+      
+    case 'clear':
+      input.value = '';
+      result.textContent = 'Result will appear here...';
+      console.log("GrayTool: Cleared input/result");
+      break;
+      
+    case 'copy-result':
+      const resultText = result.textContent;
+      if (resultText && resultText !== 'Result will appear here...') {
+        copyToClipboard(resultText).then(() => {
+          showNotification('Result copied to clipboard!', 'success');
+          console.log("GrayTool: Copied result to clipboard");
+        }).catch(() => {
+          showNotification('Failed to copy result', 'error');
+        });
+      } else {
+        showNotification('No result to copy', 'error');
+      }
+      break;
+  }
+}
+
+// Generate DevTools Tab Content
+function generateDevToolsContent(rawContent) {
+  return `
+    <div class="graytool-devtools-container">
+      <!-- JSON Escape/Unescape Tool -->
+      <div class="graytool-tool-section" data-tool-id="json-escape">
+        <div class="graytool-tool-header" data-tool-toggle="json-escape">
+          <div class="graytool-tool-header-title">
+            🔤 JSON Escape / Unescape
+          </div>
+          <span class="graytool-tool-collapse-icon">▼</span>
+        </div>
+        <div class="graytool-tool-content">
+          <textarea 
+            class="graytool-tool-textarea" 
+            id="json-escape-input"
+            placeholder="Paste your JSON here...">${rawContent || ''}</textarea>
+          
+          <div class="graytool-tool-buttons">
+            <button class="graytool-tool-btn" data-tool-action="escape">
+              ⬆️ Escape JSON
+            </button>
+            <button class="graytool-tool-btn" data-tool-action="unescape">
+              ⬇️ Unescape JSON
+            </button>
+            <button class="graytool-tool-btn secondary" data-tool-action="clear">
+              🗑️ Clear
+            </button>
+            <button class="graytool-tool-btn secondary" data-tool-action="copy-result">
+              📋 Copy Result
+            </button>
+          </div>
+          
+          <div class="graytool-tool-result" id="json-escape-result">
+            Result will appear here...
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
 // Generate Info Tab Content
 function generateInfoTabContent(parsedContent) {
   const isMac = navigator.platform.includes('Mac');
@@ -1777,15 +2005,46 @@ function showMessageDetailPopup(messageText) {
   quickActionsDropdown.appendChild(aiButton);
   quickActionsDropdown.appendChild(permalinkButton);
   
-  // Create JSON container
+  // Create tab system
+  const tabsContainer = document.createElement('div');
+  tabsContainer.className = 'graytool-tabs';
+  
+  const jsonTab = document.createElement('button');
+  jsonTab.className = 'graytool-tab active';
+  jsonTab.textContent = '📋 JSON';
+  jsonTab.setAttribute('data-tab', 'json');
+  
+  const devToolsTab = document.createElement('button');
+  devToolsTab.className = 'graytool-tab';
+  devToolsTab.textContent = '🔧 DevTools';
+  devToolsTab.setAttribute('data-tab', 'devtools');
+  
+  tabsContainer.appendChild(jsonTab);
+  tabsContainer.appendChild(devToolsTab);
+  
+  // Create JSON tab content
+  const jsonTabContent = document.createElement('div');
+  jsonTabContent.className = 'graytool-tab-content active';
+  jsonTabContent.setAttribute('data-tab-content', 'json');
+  
   const jsonContainer = document.createElement('div');
   jsonContainer.className = 'graytool-json-container';
   jsonContainer.innerHTML = formatJSON(parsedContent);
   
+  jsonTabContent.appendChild(jsonContainer);
+  
+  // Create DevTools tab content
+  const devToolsTabContent = document.createElement('div');
+  devToolsTabContent.className = 'graytool-tab-content';
+  devToolsTabContent.setAttribute('data-tab-content', 'devtools');
+  devToolsTabContent.innerHTML = generateDevToolsContent(rawContent);
+  
   // Assemble popup
   popupContent.appendChild(header);
   popupContent.appendChild(quickActionsDropdown);
-  popupContent.appendChild(jsonContainer);
+  popupContent.appendChild(tabsContainer);
+  popupContent.appendChild(jsonTabContent);
+  popupContent.appendChild(devToolsTabContent);
   overlay.appendChild(popupContent);
   
   // Add to page
@@ -1827,6 +2086,50 @@ function showMessageDetailPopup(messageText) {
     if (e.target.classList.contains('graytool-action-btn')) {
       const action = e.target.getAttribute('data-action');
       handleQuickAction(action, rawContent, parsedContent);
+    }
+  });
+  
+  // Add tab switching functionality
+  tabsContainer.addEventListener('click', (e) => {
+    if (e.target.classList.contains('graytool-tab')) {
+      const targetTab = e.target.getAttribute('data-tab');
+      
+      // Update tab active states
+      tabsContainer.querySelectorAll('.graytool-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      e.target.classList.add('active');
+      
+      // Update content active states
+      popupContent.querySelectorAll('.graytool-tab-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      popupContent.querySelector(`[data-tab-content="${targetTab}"]`).classList.add('active');
+      
+      console.log("GrayTool: Switched to tab:", targetTab);
+    }
+  });
+  
+  // Add DevTools functionality
+  devToolsTabContent.addEventListener('click', (e) => {
+    // Handle tool actions (escape, unescape, etc.)
+    if (e.target.hasAttribute('data-tool-action')) {
+      const action = e.target.getAttribute('data-tool-action');
+      handleDevToolAction(action);
+      return;
+    }
+    
+    // Handle tool collapse/expand
+    const header = e.target.closest('[data-tool-toggle]');
+    if (header) {
+      const toolId = header.getAttribute('data-tool-toggle');
+      const toolSection = document.querySelector(`[data-tool-id="${toolId}"]`);
+      
+      if (toolSection) {
+        toolSection.classList.toggle('collapsed');
+        const isCollapsed = toolSection.classList.contains('collapsed');
+        console.log(`GrayTool: Tool ${toolId} ${isCollapsed ? 'collapsed' : 'expanded'}`);
+      }
     }
   });
   
