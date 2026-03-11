@@ -91,8 +91,27 @@ export const OptionsPage: React.FC = () => {
     setEditingPattern(newPattern);
   };
 
-  const handleSavePattern = () => {
+  const handleSavePattern = async () => {
     if (!config || !editingPattern) return;
+
+    // Request permission for the new pattern
+    if (editingPattern.pattern) {
+      try {
+        const granted = await chrome.permissions.request({
+          origins: [editingPattern.pattern],
+        });
+        if (!granted) {
+          setImportStatus({
+            type: "error",
+            message: "Permission denied. The extension will not work on this URL pattern."
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to request permission:", error);
+      }
+    }
+
     const existingIndex = config.urlPatterns.findIndex((p) => p.id === editingPattern.id);
     let newPatterns: UrlPattern[];
     if (existingIndex >= 0) {
@@ -274,6 +293,30 @@ export const OptionsPage: React.FC = () => {
       return;
     }
 
+    // Request permissions for imported URL patterns
+    const patternsToRequest = sanitized.urlPatterns
+      .filter((p) => p.pattern)
+      .map((p) => p.pattern);
+
+    if (patternsToRequest.length > 0) {
+      try {
+        const granted = await chrome.permissions.request({
+          origins: patternsToRequest,
+        });
+        if (!granted) {
+          setImportStatus({
+            type: "error",
+            message: "Permission denied. The extension will not work on the imported URL patterns."
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Failed to request permissions:", error);
+        setImportStatus({ type: "error", message: "Failed to request permissions." });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       await saveConfig(sanitized);
@@ -346,7 +389,7 @@ export const OptionsPage: React.FC = () => {
   // Filter buttons based on search and pattern filter
   const getFilteredButtons = (): ButtonConfig[] => {
     let filtered = config.buttons;
-    
+
     // Filter by search text
     if (buttonSearch.trim()) {
       const searchLower = buttonSearch.toLowerCase();
@@ -355,7 +398,7 @@ export const OptionsPage: React.FC = () => {
         button.url.toLowerCase().includes(searchLower)
       );
     }
-    
+
     // Filter by URL pattern
     if (buttonPatternFilter !== "all") {
       filtered = filtered.filter((button) => {
@@ -366,7 +409,7 @@ export const OptionsPage: React.FC = () => {
         return patternIds.includes(buttonPatternFilter);
       });
     }
-    
+
     return filtered;
   };
 
@@ -752,7 +795,7 @@ export const OptionsPage: React.FC = () => {
                                 </select>
                               </div>
                             </div>
-                            
+
                             {/* URL Pattern Selection */}
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">URL Patterns</label>
@@ -810,7 +853,7 @@ export const OptionsPage: React.FC = () => {
                                     Button will only appear when all conditions are met.
                                   </span>
                                 </div>
-                                
+
                                 {editingButton.conditions.map((condition, index) => (
                                   <div
                                     key={index}
@@ -861,7 +904,7 @@ export const OptionsPage: React.FC = () => {
                                     </button>
                                   </div>
                                 ))}
-                                
+
                                 <button
                                   type="button"
                                   className="gl-btn btn btn-default"

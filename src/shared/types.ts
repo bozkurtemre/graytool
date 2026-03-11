@@ -120,7 +120,25 @@ export interface CheckUrlResponse {
   matchedPatternId?: string; // ID of the URL pattern that matched
 }
 
+// Permission-related messages
+export interface RequestPermissionMessage {
+  type: "REQUEST_PERMISSION";
+  pattern: string;
+}
+
+export interface HasPermissionMessage {
+  type: "HAS_PERMISSION";
+  url: string;
+}
+
+export interface GetConfiguredOriginsMessage {
+  type: "GET_CONFIGURED_ORIGINS";
+}
+
 export type GrayToolMessage =
   | ActivateMessage
   | DeactivateMessage
-  | ConfigUpdatedMessage;
+  | ConfigUpdatedMessage
+  | RequestPermissionMessage
+  | HasPermissionMessage
+  | GetConfiguredOriginsMessage;
