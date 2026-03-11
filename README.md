@@ -1,4 +1,7 @@
-# Graytool Chrome Extension
+<div align="center">
+  <img src="src/logo.svg" alt="Graytool Logo" width="128" height="128">
+  <h1>Graytool Chrome Extension</h1>
+</div>
 
 Graytool is a Chrome extension (Manifest V3) that enhances Graylog log management by injecting configurable action buttons into log rows. It helps developers jump from log entries to admin panels, user details, and internal tools faster.
 
