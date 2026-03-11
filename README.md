@@ -1,68 +1,78 @@
-# GrayTool Chrome Extension
+# Graytool Chrome Extension
 
-A Chrome extension tool for Graylog that injects buttons in Graylog logs to query your admin panel.
+Graytool is a Chrome extension (Manifest V3) that enhances Graylog log management by injecting configurable action buttons into log rows. It helps developers jump from log entries to admin panels, user details, and internal tools faster.
 
-## Development Setup
+## Features
+
+- URL pattern matching to activate only on configured Graylog instances
+- Configurable buttons with URL templates and field bindings
+- Automatic field discovery from log rows (data attributes, JSON parsing, DOM patterns)
+- Conditional button visibility based on field values
+- JSON viewer and search history for log message details
+- Import/export configuration for sharing between environments
+
+## Project Structure
+
+```
+src/
+  manifest.json
+  background.ts
+  inject/            # Content script files
+  options/           # Options UI (React)
+  shared/            # Shared types + storage
+  icons/
+```
+
+## Development
 
 ### Prerequisites
-- Node.js (version 16 or higher)
-- npm
 
-### Installation
+- Node.js 16+ (npm)
 
-1. Clone the repository and navigate to the project directory
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+### Install
 
-### Building the Extension
+```bash
+npm install
+```
 
-#### Development Build (with source maps)
+### Build
+
 ```bash
 npm run build
 ```
 
-#### Production Build (minified)
-```bash
-npm run build:prod
-```
+Build outputs are written into `src/` for loading the extension directly.
 
-#### Watch Mode (for development)
+### Watch mode
+
 ```bash
 npm run dev
 ```
 
-This will watch for changes and automatically rebuild the CSS and JavaScript files.
+### Typecheck / Lint
 
-#### Clean Build Directory
+```bash
+npm run lint
+```
+
+### Clean
+
 ```bash
 npm run clean
 ```
 
-### Loading the Extension in Chrome
+## Loading the Extension
 
-1. Build the extension: `npm run build`
+1. Run `npm run build`
 2. Open Chrome and navigate to `chrome://extensions/`
-3. Enable "Developer mode" in the top right
-4. Click "Load unpacked" and select the project directory
-5. The extension should now be loaded and visible in your extensions
+3. Enable "Developer mode"
+4. Click "Load unpacked" and select the `src` directory
+5. Reload the extension after code changes
 
-### Development Workflow
+## Release Package
 
-1. Make changes to your code
-2. Run `npm run dev` to start watch mode
-3. The files will be automatically rebuilt when you save changes
-4. Reload the extension in Chrome by clicking the reload button on the extension card
+```bash
+npm run release
+```
 
-### Technologies Used
-
-- **React** - UI framework
-- **TypeScript** - Type-safe JavaScript
-- **TailwindCSS** - Utility-first CSS framework
-- **esbuild** - Fast JavaScript bundler
-- **Chrome Extensions Manifest V3** - Latest Chrome extension format
-
-## Usage
-
-After installing the extension, it will be available in your Chrome toolbar. The extension works on Graylog pages that match the patterns defined in `manifest.json`.
+This produces a zip at `build/release/graytool-<version>.zip` using the version from `package.json`.

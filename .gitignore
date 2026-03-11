@@ -5,7 +5,16 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build outputs
-# dist/
+build/
+dist/
+src/css/
+src/webfonts/
+src/background.js
+src/background.js.map
+src/inject/index.js
+src/inject/index.js.map
+src/options/options.js
+src/options/options.js.map
 
 # OS generated files
 .DS_Store
