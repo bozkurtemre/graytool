@@ -15,6 +15,9 @@ on:
         required: true
         default: '22.x'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
