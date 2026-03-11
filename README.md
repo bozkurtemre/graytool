@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="src/logo.svg" alt="Graytool Logo" width="128" height="128">
+  <img src="src/logo.svg" alt="Graytool Logo" width="256" height="128">
 </div>
 
 ##
