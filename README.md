@@ -1,7 +1,10 @@
 <div align="center">
   <img src="src/logo.svg" alt="Graytool Logo" width="256" height="128">
-  <br/>
-  <a rel="noreferrer noopener" href="https://chromewebstore.google.com/detail/graytool"><img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome-141e24.svg?&style=for-the-badge&logo=google-chrome&logoColor=white"></a>
+</div>
+
+<br/>
+<div align="center">
+<a rel="noreferrer noopener" href="https://chromewebstore.google.com/detail/graytool"><img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome-141e24.svg?&style=for-the-badge&logo=google-chrome&logoColor=white"></a>
 </div>
 
 ##
