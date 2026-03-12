@@ -8,7 +8,7 @@ let currentTheme: "light" | "dark" = "dark";
 function detectGraylogTheme(): "light" | "dark" {
   try {
     let themeMode = localStorage.getItem("themeMode");
-    
+
     // Handle JSON-encoded value (e.g., "\"light\"")
     if (themeMode) {
       try {
@@ -20,7 +20,7 @@ function detectGraylogTheme(): "light" | "dark" {
         // Not JSON, use as-is
       }
     }
-    
+
     if (themeMode === "light" || themeMode === "dark") {
       return themeMode;
     }
@@ -645,10 +645,37 @@ const SHARED_CSS = `
 
 /* ─── Tabs (JSON Viewer footer) ─────────────────────────── */
 
+.gt-tabs-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.gt-tabs-wrapper.gt-tabs-collapsed .gt-tabs-content {
+  display: none !important;
+}
+
+.gt-tabs-wrapper.gt-tabs-collapsed .gt-tab {
+  padding: 6px 12px;
+  opacity: 0.6;
+}
+
+.gt-tabs-wrapper.gt-tabs-collapsed .gt-tab.gt-active {
+  opacity: 1;
+}
+
 .gt-tabs {
   display: flex;
   border-top: 1px solid var(--gt-border);
   background: var(--gt-bg-page);
+  position: relative;
+}
+
+.gt-tabs.gt-tabs-draggable {
+  cursor: ns-resize;
+}
+
+.gt-tabs.gt-tabs-draggable:hover {
+  border-top-color: var(--gt-primary);
 }
 
 .gt-tab {
@@ -676,9 +703,20 @@ const SHARED_CSS = `
   font-weight: 500;
 }
 
+.gt-tabs-content {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  max-height: 300px;
+  overflow: hidden;
+  transition: height 0.1s ease;
+}
+
 .gt-tab-content {
   display: none;
   padding: 12px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .gt-tab-content.gt-active {

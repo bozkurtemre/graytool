@@ -17,7 +17,7 @@ async function copyToClipboard(text: string): Promise<void> {
   if (navigator.clipboard?.writeText) {
     return navigator.clipboard.writeText(text);
   }
-  
+
   // Fallback for contexts where clipboard API is not available
   // This is needed for older browsers and certain contexts
   return new Promise((resolve, reject) => {
@@ -29,11 +29,11 @@ async function copyToClipboard(text: string): Promise<void> {
       document.body.appendChild(ta);
       ta.select();
       ta.setSelectionRange(0, text.length);
-      
+
       // execCommand is deprecated but still needed as fallback for older browsers
       const success = document.execCommand("copy");
       document.body.removeChild(ta);
-      
+
       if (success) {
         resolve();
       } else {
@@ -87,6 +87,9 @@ let currentSearchTerm = "";
 let currentFocusIndex = -1;
 let matchedRows: HTMLElement[] = [];
 const collapseState = new Map<string, boolean>();
+
+// Tab collapse state key for localStorage
+const TAB_COLLAPSED_KEY = "graytool_tabs_collapsed";
 
 // ─── Public API ───────────────────────────────────────────────
 
@@ -202,7 +205,7 @@ function createViewerPanel(
       document.removeEventListener("keydown", handleKey);
       return;
     }
-    
+
     // Focus search with "/"
     if (e.key === "/" && !isInputFocused()) {
       e.preventDefault();
@@ -852,16 +855,41 @@ function removeHighlights(el: HTMLElement): void {
 
 // ─── Tabs ─────────────────────────────────────────────────────
 
+// Helper to get/save collapsed state
+function getTabsCollapsedState(): boolean {
+  try {
+    return localStorage.getItem(TAB_COLLAPSED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveTabsCollapsedState(collapsed: boolean): void {
+  try {
+    localStorage.setItem(TAB_COLLAPSED_KEY, String(collapsed));
+  } catch {
+    // Ignore localStorage errors
+  }
+}
+
 function createTabs(
   rawContent: string,
   _body: HTMLElement,
   data: Record<string, unknown>,
 ): HTMLElement {
   const wrapper = document.createElement("div");
+  wrapper.className = "gt-tabs-wrapper";
 
-  // Tab bar
+  // Check saved state - default to collapsed (if not set, collapse by default)
+  const savedState = localStorage.getItem(TAB_COLLAPSED_KEY);
+  const isInitiallyCollapsed = savedState === null ? true : savedState === "true";
+  if (isInitiallyCollapsed) {
+    wrapper.classList.add("gt-tabs-collapsed");
+  }
+
+  // Tab bar - draggable from top edge
   const tabBar = document.createElement("div");
-  tabBar.className = "gt-tabs";
+  tabBar.className = "gt-tabs gt-tabs-draggable";
 
   const tabs = ["Raw", "DevTools", "Code"];
   const tabPanels: HTMLElement[] = [];
@@ -875,6 +903,12 @@ function createTabs(
     panel.className = `gt-tab-content${index === 0 ? " gt-active" : ""}`;
 
     tab.addEventListener("click", () => {
+      // If tabs are collapsed, expand them first
+      if (wrapper.classList.contains("gt-tabs-collapsed")) {
+        wrapper.classList.remove("gt-tabs-collapsed");
+        saveTabsCollapsedState(false);
+      }
+
       tabBar
         .querySelectorAll(".gt-tab")
         .forEach((t) => t.classList.remove("gt-active"));
@@ -885,6 +919,81 @@ function createTabs(
 
     tabBar.appendChild(tab);
     tabPanels.push(panel);
+  });
+
+  // Content container for tab panels
+  const contentContainer = document.createElement("div");
+  contentContainer.className = "gt-tabs-content";
+
+  // Double-click to toggle collapse/expand
+  tabBar.addEventListener("dblclick", (e) => {
+    const isCollapsed = wrapper.classList.toggle("gt-tabs-collapsed");
+    saveTabsCollapsedState(isCollapsed);
+    if (!isCollapsed) {
+      contentContainer.style.height = "250px";
+    } else {
+      contentContainer.style.height = "";
+    }
+  });
+
+  // Make tab bar draggable from top edge for collapse/expand
+  let startY = 0;
+  let startHeight = 0;
+  let isDragging = false;
+
+  tabBar.addEventListener("mousedown", (e) => {
+    // Only start drag from the top edge (first 10px of tab bar - thicker for easier grip)
+    const rect = tabBar.getBoundingClientRect();
+    const relativeY = e.clientY - rect.top;
+
+    if (relativeY > 10) return; // Not in top edge area
+
+    isDragging = true;
+    startY = e.clientY;
+
+    // If collapsed, expand first with initial height
+    if (wrapper.classList.contains("gt-tabs-collapsed")) {
+      wrapper.classList.remove("gt-tabs-collapsed");
+      saveTabsCollapsedState(false);
+      startHeight = 200; // Initial height when expanding
+    } else {
+      startHeight = contentContainer.offsetHeight || contentContainer.scrollHeight;
+    }
+
+    document.body.style.cursor = "ns-resize";
+    document.body.style.userSelect = "none";
+
+    e.preventDefault();
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isDragging) return;
+
+    // Invert direction: dragging down (positive deltaY) collapses, dragging up expands
+    const deltaY = startY - e.clientY; // Inverted
+    const newHeight = Math.max(0, startHeight + deltaY);
+
+    if (newHeight < 30) {
+      // Collapse if dragged near zero
+      wrapper.classList.add("gt-tabs-collapsed");
+      saveTabsCollapsedState(true);
+      contentContainer.style.height = "";
+      isDragging = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    } else {
+      wrapper.classList.remove("gt-tabs-collapsed");
+      saveTabsCollapsedState(false);
+      contentContainer.style.height = `${newHeight}px`;
+    }
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (isDragging) {
+      isDragging = false;
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
+    }
   });
 
   // Raw tab content
@@ -900,7 +1009,8 @@ function createTabs(
   tabPanels[2].appendChild(createCodeTab(data));
 
   wrapper.appendChild(tabBar);
-  tabPanels.forEach((p) => wrapper.appendChild(p));
+  tabPanels.forEach((p) => contentContainer.appendChild(p));
+  wrapper.appendChild(contentContainer);
   return wrapper;
 }
 
@@ -1101,16 +1211,16 @@ import (
 ${goStruct}
 func main() {
     payload := ${objectToGoInit(data, "Payload", 2)}
-    
+
     jsonData, _ := json.Marshal(payload)
-    
+
     req, _ := http.NewRequest("POST", "https://api.example.com/endpoint", bytes.NewBuffer(jsonData))
     req.Header.Set("Content-Type", "application/json")
-    
+
     client := &http.Client{}
     resp, _ := client.Do(req)
     defer resp.Body.Close()
-    
+
     body, _ := io.ReadAll(resp.Body)
     fmt.Println(string(body))
 }`;
@@ -1130,18 +1240,18 @@ public class Main {
     public static void main(String[] args) throws Exception {
         URL url = new URL("https://api.example.com/endpoint");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-        
+
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setDoOutput(true);
-        
+
         String jsonInputString = "${jsonStr}";
-        
+
         try (OutputStream os = conn.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);
         }
-        
+
         try (BufferedReader br = new BufferedReader(
                 new InputStreamReader(conn.getInputStream(), "utf-8"))) {
             StringBuilder response = new StringBuilder();
@@ -1160,18 +1270,18 @@ public class Main {
 function objectToPhpArray(obj: unknown, indent: number): string {
   const spaces = " ".repeat(indent);
   const innerSpaces = " ".repeat(indent + 4);
-  
+
   if (obj === null) return "null";
   if (typeof obj === "boolean") return obj ? "true" : "false";
   if (typeof obj === "number") return String(obj);
   if (typeof obj === "string") return `"${obj.replace(/"/g, '\\"')}"`;
-  
+
   if (Array.isArray(obj)) {
     if (obj.length === 0) return "[]";
     const items = obj.map((item) => objectToPhpArray(item, indent + 4));
     return `[\n${innerSpaces}${items.join(`,\n${innerSpaces}`)}\n${spaces}]`;
   }
-  
+
   if (typeof obj === "object") {
     const entries = Object.entries(obj as Record<string, unknown>);
     if (entries.length === 0) return "[]";
@@ -1180,25 +1290,25 @@ function objectToPhpArray(obj: unknown, indent: number): string {
     });
     return `[\n${innerSpaces}${items.join(`,\n${innerSpaces}`)}\n${spaces}]`;
   }
-  
+
   return "null";
 }
 
 function objectToPythonDict(obj: unknown, indent: number): string {
   const spaces = " ".repeat(indent);
   const innerSpaces = " ".repeat(indent + 4);
-  
+
   if (obj === null) return "None";
   if (typeof obj === "boolean") return obj ? "True" : "False";
   if (typeof obj === "number") return String(obj);
   if (typeof obj === "string") return `"${obj.replace(/"/g, '\\"')}"`;
-  
+
   if (Array.isArray(obj)) {
     if (obj.length === 0) return "[]";
     const items = obj.map((item) => objectToPythonDict(item, indent + 4));
     return `[\n${innerSpaces}${items.join(`,\n${innerSpaces}`)}\n${spaces}]`;
   }
-  
+
   if (typeof obj === "object") {
     const entries = Object.entries(obj as Record<string, unknown>);
     if (entries.length === 0) return "{}";
@@ -1207,7 +1317,7 @@ function objectToPythonDict(obj: unknown, indent: number): string {
     });
     return `{\n${innerSpaces}${items.join(`,\n${innerSpaces}`)}\n${spaces}}`;
   }
-  
+
   return "None";
 }
 
@@ -1215,16 +1325,16 @@ function objectToGoStruct(obj: unknown, structName: string, depth: number): stri
   if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
     return "";
   }
-  
+
   const entries = Object.entries(obj as Record<string, unknown>);
   if (entries.length === 0) return "";
-  
+
   let result = `type ${structName} struct {\n`;
-  
+
   for (const [key, val] of entries) {
     const fieldName = key.charAt(0).toUpperCase() + key.slice(1);
     let fieldType: string;
-    
+
     if (val === null) {
       fieldType = "interface{}";
     } else if (typeof val === "string") {
@@ -1241,10 +1351,10 @@ function objectToGoStruct(obj: unknown, structName: string, depth: number): stri
     } else {
       fieldType = "interface{}";
     }
-    
+
     result += `    ${fieldName} ${fieldType} \`json:"${key}"\`\n`;
   }
-  
+
   result += "}\n\n";
   return result;
 }
@@ -1252,18 +1362,18 @@ function objectToGoStruct(obj: unknown, structName: string, depth: number): stri
 function objectToGoInit(obj: unknown, structName: string, indent: number): string {
   const spaces = " ".repeat(indent);
   const innerSpaces = " ".repeat(indent + 4);
-  
+
   if (obj === null) return "nil";
   if (typeof obj === "boolean") return obj ? "true" : "false";
   if (typeof obj === "number") return String(obj);
   if (typeof obj === "string") return `"${obj}"`;
-  
+
   if (Array.isArray(obj)) {
     if (obj.length === 0) return "[]interface{}{}";
     const items = obj.map((item) => objectToGoInit(item, structName, indent + 4));
     return `[]interface{}{\n${innerSpaces}${items.join(`,\n${innerSpaces}`)}\n${spaces}}`;
   }
-  
+
   if (typeof obj === "object") {
     const entries = Object.entries(obj as Record<string, unknown>);
     if (entries.length === 0) return `${structName}{}`;
@@ -1273,7 +1383,7 @@ function objectToGoInit(obj: unknown, structName: string, indent: number): strin
     });
     return `${structName}{\n${innerSpaces}${items.join(`,\n${innerSpaces}`)}\n${spaces}}`;
   }
-  
+
   return "nil";
 }
 
@@ -1297,7 +1407,7 @@ function createCodeTab(data: Record<string, unknown>): HTMLElement {
 
   const langSelect = document.createElement("select");
   langSelect.className = "gt-json-field-select";
-  
+
   const languages = Object.keys(CODE_GENERATORS) as CodeLanguage[];
   languages.forEach((lang) => {
     const opt = document.createElement("option");
@@ -1305,7 +1415,7 @@ function createCodeTab(data: Record<string, unknown>): HTMLElement {
     opt.textContent = CODE_GENERATORS[lang].name;
     langSelect.appendChild(opt);
   });
-  
+
   selectorRow.appendChild(langSelect);
 
   // Copy button
@@ -1323,12 +1433,12 @@ function createCodeTab(data: Record<string, unknown>): HTMLElement {
   codePre.style.maxHeight = "400px";
   codePre.style.fontSize = "12px";
   codePre.style.margin = "0";
-  
+
   const updateCode = () => {
     const lang = langSelect.value as CodeLanguage;
     codePre.textContent = CODE_GENERATORS[lang].generate(data);
   };
-  
+
   updateCode();
   langSelect.addEventListener("change", updateCode);
 
