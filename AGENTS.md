@@ -36,6 +36,8 @@ This document provides essential context and conventions for AI coding agents wo
 │  src/shared/          │ Shared code                         │
 │    types.ts           │ TypeScript type definitions          │
 │    storage.ts         │ Chrome storage abstraction          │
+│    constants.ts       │ Shared constants & magic strings    │
+│    utils.ts           │ Shared utilities (escape, clipboard)│
 │  src/manifest.json    │ Chrome extension manifest           │
 │  src/icons/           │ Extension icons                     │
 │  src/logo.svg         │ Extension logo (used in options)    │
@@ -107,9 +109,13 @@ import type { GrayToolConfig, ButtonConfig } from "../shared/types";
 
 // ✅ Regular imports for runtime values
 import { getConfig, saveConfig } from "../shared/storage";
+import { STORAGE_KEY, PROCESSED_ATTR } from "../shared/constants";
+import { escapeHtml, escapeAttr, copyToClipboard } from "../shared/utils";
 
-// ✅ Import order: external → internal → types
+// ✅ Import order: external → shared (constants, utils, storage) → internal → types
 import React, { useState, useEffect } from "react";
+import { PROCESS_INTERVAL_MS } from "../shared/constants";
+import { escapeHtml } from "../shared/utils";
 import { getConfig } from "../shared/storage";
 import type { GrayToolConfig } from "../shared/types";
 ```
@@ -264,6 +270,32 @@ chrome.storage.sync.get(["graytool_config"], (result) => {
 });
 ```
 
+### Constants & Utilities
+
+**All magic strings and shared constants MUST be imported from [`shared/constants.ts`](shared/constants.ts)**. Never hardcode storage keys, DOM attribute names, or timing values.
+
+```typescript
+// ✅ Good
+import { STORAGE_KEY, PROCESSED_ATTR, PROCESS_INTERVAL_MS } from "../shared/constants";
+
+// ❌ Never do this
+const STORAGE_KEY = "graytool_config";
+const attr = "data-graytool-processed";
+```
+
+**All shared utility functions MUST be imported from [`shared/utils.ts`](shared/utils.ts)**. Never duplicate `escapeHtml`, `escapeAttr`, or `copyToClipboard` in individual modules.
+
+```typescript
+// ✅ Good
+import { escapeHtml, escapeAttr, copyToClipboard } from "../shared/utils";
+
+// ✅ Use escapeAttr for HTML attribute values (prevents XSS)
+content.innerHTML = `<span data-field="${escapeAttr(fieldName)}">${escapeHtml(value)}</span>`;
+
+// ❌ Never define local escapeHtml/copyToClipboard functions
+function escapeHtml(text: string) { ... }
+```
+
 ### CSS and Styling
 
 - Use TailwindCSS utility classes in React components
@@ -307,6 +339,8 @@ chrome.runtime.onMessage.addListener((message: GrayToolMessage) => {
 |------|---------|
 | [`src/shared/types.ts`](src/shared/types.ts) | All TypeScript type definitions |
 | [`src/shared/storage.ts`](src/shared/storage.ts) | Chrome storage abstraction (REQUIRED for all storage access) |
+| [`src/shared/constants.ts`](src/shared/constants.ts) | Shared constants: storage keys, DOM attributes, timing values |
+| [`src/shared/utils.ts`](src/shared/utils.ts) | Shared utilities: `escapeHtml`, `escapeAttr`, `copyToClipboard` |
 | [`src/background.ts`](src/background.ts) | Service worker, URL pattern matching |
 | [`src/inject/index.ts`](src/inject/index.ts) | Inject script entry point |
 | [`src/options/options.tsx`](src/options/options.tsx) | Options page entry point |

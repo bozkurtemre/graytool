@@ -1272,7 +1272,7 @@ export const OptionsPage: React.FC = () => {
 
       {/* Footer */}
       <footer className="gl-footer">
-        Graytool Chrome Extension v2.0
+        Graytool Chrome Extension
       </footer>
     </div>
   );
