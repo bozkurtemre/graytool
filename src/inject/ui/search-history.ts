@@ -1,11 +1,7 @@
 // inject/ui/search-history.ts — Search query history feature
 // Captures executed search queries from Ace Editor and displays them in a popup.
 
-import {
-  getSearchHistory,
-  saveSearchQuery,
-  clearSearchHistory,
-} from "../../shared/storage";
+import { getSearchHistory, saveSearchQuery, clearSearchHistory } from "../../shared/storage";
 import type { SearchHistoryEntry } from "../../shared/types";
 
 // ─── State ────────────────────────────────────────────────────────
@@ -64,7 +60,7 @@ export function destroySearchHistoryListener(): void {
   if (searchBtn && boundSearchClickListener) {
     searchBtn.removeEventListener("click", boundSearchClickListener);
   }
-  
+
   const queryEditor = document.getElementById("QueryEditor");
   if (queryEditor && boundEnterListener) {
     queryEditor.removeEventListener("keydown", boundEnterListener);
@@ -100,7 +96,9 @@ function setupAceEditorInterception(): void {
   // Usually it's next to or near the query editor, often a submit button in a form
   const form = queryEditor.closest("form");
   if (form) {
-    const searchBtn = form.querySelector('button[type="submit"], button.search-button, button[title*="Search"]');
+    const searchBtn = form.querySelector(
+      'button[type="submit"], button.search-button, button[title*="Search"]',
+    );
     if (searchBtn) {
       boundSearchClickListener = () => {
         captureSearchQuery();
@@ -118,7 +116,7 @@ function extractAceEditorValue(): string {
 
   // Strategy 1: Look for the hidden textarea used by Ace for value submission (if exists)
   // Sometimes Ace synchronizes with a hidden input
-  
+
   // Strategy 2: Look for the visible text lines
   const lines = queryEditor.querySelectorAll(".ace_line");
   if (lines.length > 0) {
@@ -191,27 +189,29 @@ function applySearchQuery(query: string): void {
 
   // Find the Ace Editor's underlying textarea
   const textArea = queryEditor.querySelector("textarea.ace_text-input") as HTMLTextAreaElement;
-  
+
   if (textArea) {
     // Select all existing text (Ctrl+A / Cmd+A equivalent)
     textArea.focus();
-    
+
     // We need to trigger a sequence of events to make Ace Editor accept the new value
     // 1. Select all
     textArea.select();
-    
+
     // 2. Set the new value
     textArea.value = query;
-    
+
     // 3. Dispatch input event
     textArea.dispatchEvent(new Event("input", { bubbles: true }));
-    
+
     // Auto-execute the search
     setTimeout(() => {
       // Find the form submit button
       const form = queryEditor.closest("form");
       if (form) {
-        const searchBtn = form.querySelector('button[type="submit"], button.search-button, button[title*="Search"]') as HTMLButtonElement;
+        const searchBtn = form.querySelector(
+          'button[type="submit"], button.search-button, button[title*="Search"]',
+        ) as HTMLButtonElement;
         if (searchBtn) {
           searchBtn.click();
         } else {
@@ -258,7 +258,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   // Create overlay
   historyPanel = document.createElement("div");
   historyPanel.className = "gt-json-overlay gt-history-overlay";
-  
+
   // Close when clicking overlay background
   historyPanel.addEventListener("click", (e) => {
     if (e.target === historyPanel) {
@@ -271,18 +271,19 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   panel.className = "gt-json-panel gt-history-panel";
   panel.style.width = "600px";
   panel.style.maxHeight = "70vh";
-  
+
   // Header
   const header = document.createElement("div");
   header.className = "gt-json-header";
-  
+
   const title = document.createElement("div");
   title.className = "gt-json-header-title";
-  title.innerHTML = '<i class="fas fa-history fa-fw" style="margin-right: 6px;"></i> Search History';
-  
+  title.innerHTML =
+    '<i class="fas fa-history fa-fw" style="margin-right: 6px;"></i> Search History';
+
   const actions = document.createElement("div");
   actions.className = "gt-json-header-actions";
-  
+
   const clearBtn = document.createElement("button");
   clearBtn.className = "gt-json-header-btn gt-history-clear-btn";
   clearBtn.innerHTML = '<i class="fas fa-trash fa-fw"></i>';
@@ -293,29 +294,29 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
       closeHistoryPanel();
     }
   });
-  
+
   const closeBtn = document.createElement("button");
   closeBtn.className = "gt-json-header-btn";
   closeBtn.innerHTML = '<i class="fas fa-times fa-fw"></i>';
   closeBtn.title = "Close (Esc)";
   closeBtn.addEventListener("click", closeHistoryPanel);
-  
+
   // Only show clear button if there is history
   if (history.length > 0) {
     actions.appendChild(clearBtn);
   }
   actions.appendChild(closeBtn);
-  
+
   header.appendChild(title);
   header.appendChild(actions);
   panel.appendChild(header);
-  
+
   // Search Bar
   const searchContainer = document.createElement("div");
   searchContainer.style.padding = "10px 12px";
   searchContainer.style.borderBottom = "1px solid var(--gt-border)";
   searchContainer.style.backgroundColor = "var(--gt-bg-header)";
-  
+
   const searchInput = document.createElement("input");
   searchInput.type = "text";
   searchInput.placeholder = "Search in history...";
@@ -327,7 +328,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   searchInput.style.color = "var(--gt-text)";
   searchInput.style.fontSize = "13px";
   searchInput.style.boxSizing = "border-box";
-  
+
   searchContainer.appendChild(searchInput);
   panel.appendChild(searchContainer);
 
@@ -338,13 +339,14 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   body.style.overflowY = "auto";
   body.style.padding = "0";
   body.style.backgroundColor = "var(--gt-bg-card)";
-  
+
   if (history.length === 0) {
     const emptyMsg = document.createElement("div");
     emptyMsg.style.textAlign = "center";
     emptyMsg.style.padding = "30px 20px";
     emptyMsg.style.color = "var(--gt-text-muted)";
-    emptyMsg.textContent = "No search history recorded yet. Execute a search in Graylog to save it.";
+    emptyMsg.textContent =
+      "No search history recorded yet. Execute a search in Graylog to save it.";
     body.appendChild(emptyMsg);
     searchInput.disabled = true;
   } else {
@@ -362,19 +364,19 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
       item.style.alignItems = "flex-start";
       item.style.justifyContent = "space-between";
       item.style.transition = "background-color 0.15s";
-      
+
       item.addEventListener("mouseenter", () => {
         item.style.backgroundColor = "var(--gt-bg-hover)";
       });
       item.addEventListener("mouseleave", () => {
         item.style.backgroundColor = "transparent";
       });
-      
+
       item.addEventListener("click", () => {
         applySearchQuery(entry.query);
         closeHistoryPanel();
       });
-      
+
       const contentDiv = document.createElement("div");
       contentDiv.style.flex = "1";
       contentDiv.style.display = "flex";
@@ -390,13 +392,13 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
       queryText.style.whiteSpace = "pre-wrap";
       queryText.style.wordBreak = "break-all";
       queryText.textContent = entry.query;
-      
+
       const dateText = document.createElement("div");
       dateText.style.fontSize = "11px";
       dateText.style.color = "var(--gt-text-muted)";
       const date = new Date(entry.timestamp);
       dateText.textContent = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-      
+
       contentDiv.appendChild(queryText);
       contentDiv.appendChild(dateText);
       item.appendChild(contentDiv);
@@ -409,17 +411,17 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
       copyBtn.style.marginTop = "2px";
       copyBtn.style.color = "var(--gt-text-muted)";
       copyBtn.style.transition = "color 0.2s";
-      
+
       copyBtn.addEventListener("mouseenter", () => {
         copyBtn.style.color = "var(--gt-text)";
       });
       copyBtn.addEventListener("mouseleave", () => {
         copyBtn.style.color = "var(--gt-text-muted)";
       });
-      
+
       copyBtn.addEventListener("click", async (e) => {
         e.stopPropagation(); // Prevent the item click which executes the search
-        
+
         try {
           // Use modern clipboard API if available (requires HTTPS / Secure Context)
           if (navigator.clipboard && window.isSecureContext) {
@@ -438,7 +440,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
             document.execCommand("copy");
             textArea.remove();
           }
-          
+
           copyBtn.innerHTML = '<i class="fas fa-check fa-fw" style="color: #4ade80;"></i>';
           setTimeout(() => {
             copyBtn.innerHTML = '<i class="fas fa-copy fa-fw"></i>';
@@ -452,7 +454,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
           }, 1500);
         }
       });
-      
+
       item.appendChild(copyBtn);
       body.appendChild(item);
       itemElements.push({ el: item, query: entry.query });
@@ -461,7 +463,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
     // Search filter logic
     searchInput.addEventListener("input", (e) => {
       const filter = (e.target as HTMLInputElement).value.toLowerCase();
-      itemElements.forEach(item => {
+      itemElements.forEach((item) => {
         if (item.query.toLowerCase().includes(filter)) {
           item.el.style.display = "flex";
         } else {
@@ -470,14 +472,14 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
       });
     });
   }
-  
+
   panel.appendChild(body);
   historyPanel.appendChild(panel);
   document.body.appendChild(historyPanel);
-  
+
   // Focus logic for Escape key
   searchInput.focus();
-  
+
   const escapeListener = (e: KeyboardEvent) => {
     if (e.key === "Escape") {
       closeHistoryPanel();

@@ -64,9 +64,7 @@ export async function getConfig(): Promise<GrayToolConfig> {
 
 // ─── Write ────────────────────────────────────────────────────
 
-export async function saveConfig(
-  partial: Partial<GrayToolConfig>,
-): Promise<void> {
+export async function saveConfig(partial: Partial<GrayToolConfig>): Promise<void> {
   const current = await getConfig();
   const updated: GrayToolConfig = {
     ...current,
@@ -91,9 +89,7 @@ function mergeWithDefaults(raw: Record<string, unknown>): GrayToolConfig {
   const defaults = getDefaultConfig();
   return {
     version: 2,
-    urlPatterns: Array.isArray(raw.urlPatterns)
-      ? raw.urlPatterns
-      : defaults.urlPatterns,
+    urlPatterns: Array.isArray(raw.urlPatterns) ? raw.urlPatterns : defaults.urlPatterns,
     buttons: Array.isArray(raw.buttons)
       ? (normalizeButtons(
           raw.buttons as Array<Record<string, unknown>>,
@@ -101,8 +97,7 @@ function mergeWithDefaults(raw: Record<string, unknown>): GrayToolConfig {
       : defaults.buttons,
     globalFieldConfig: {
       ...defaults.globalFieldConfig,
-      ...(typeof raw.globalFieldConfig === "object" &&
-      raw.globalFieldConfig !== null
+      ...(typeof raw.globalFieldConfig === "object" && raw.globalFieldConfig !== null
         ? (raw.globalFieldConfig as Partial<GlobalFieldConfig>)
         : {}),
     },
@@ -140,9 +135,7 @@ function isV1Config(raw: unknown): raw is V1Config {
   if (typeof raw !== "object" || raw === null) return false;
   const obj = raw as Record<string, unknown>;
   // v1 has no "version" field, or has "environments" or "adminBaseUrl"
-  return (
-    obj.version === undefined || "environments" in obj || "adminBaseUrl" in obj
-  );
+  return obj.version === undefined || "environments" in obj || "adminBaseUrl" in obj;
 }
 
 function migrateV1ToV2(v1: V1Config): GrayToolConfig {
@@ -218,9 +211,7 @@ export function normalizeButtons(
 /**
  * Get search history for a specific URL pattern ID
  */
-export async function getSearchHistory(
-  patternId: string,
-): Promise<SearchHistoryEntry[]> {
+export async function getSearchHistory(patternId: string): Promise<SearchHistoryEntry[]> {
   const key = `${SEARCH_HISTORY_PREFIX}${patternId}`;
   return new Promise((resolve) => {
     chrome.storage.local.get([key], (result) => {
@@ -233,10 +224,7 @@ export async function getSearchHistory(
  * Save a new search query to history
  * Dedupes existing exact matches and maintains max limit
  */
-export async function saveSearchQuery(
-  patternId: string,
-  query: string,
-): Promise<void> {
+export async function saveSearchQuery(patternId: string, query: string): Promise<void> {
   const trimmed = query.trim();
   if (!trimmed) return;
 

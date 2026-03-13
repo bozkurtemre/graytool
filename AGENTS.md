@@ -76,6 +76,15 @@ npm run dev
 # Type checking only (no emit)
 npm run typecheck
 
+# Format all source files with Prettier
+npm run format
+
+# Check formatting without writing (CI)
+npm run format:check
+
+# Lint (typecheck + format check)
+npm run lint
+
 # Clean build artifacts
 npm run clean
 ```
@@ -139,10 +148,14 @@ Use section dividers for logical groupings within files:
 
 ### Formatting
 
+Formatting is enforced by **Prettier** (see [`.prettierrc`](.prettierrc)). Run `npm run format` to auto-fix all files.
+
 - **Indentation**: 2 spaces
 - **Semicolons**: Required
 - **Quotes**: Double quotes for strings, avoid template literals for simple strings
 - **Trailing commas**: Use in multi-line arrays/objects
+- **Print width**: 100 characters
+- **End of line**: LF
 
 ```typescript
 // ✅ Good

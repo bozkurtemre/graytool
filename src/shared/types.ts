@@ -21,19 +21,9 @@ export interface UrlPattern {
 
 // ─── Button Config ────────────────────────────────────────────
 
-export type ButtonColor =
-  | "primary"
-  | "default"
-  | "danger"
-  | "warning"
-  | "success";
+export type ButtonColor = "primary" | "default" | "danger" | "warning" | "success";
 
-export type ButtonConditionOperator =
-  | "exists"
-  | "equals"
-  | "contains"
-  | "startsWith"
-  | "notEquals";
+export type ButtonConditionOperator = "exists" | "equals" | "contains" | "startsWith" | "notEquals";
 
 export interface ButtonConfig {
   id: string;
@@ -87,11 +77,7 @@ export interface SearchHistoryEntry {
 
 // ─── Field Discovery ──────────────────────────────────────────
 
-export type FieldSource =
-  | "data-field"
-  | "json-parse"
-  | "text-pattern"
-  | "dom-attribute";
+export type FieldSource = "data-field" | "json-parse" | "text-pattern" | "dom-attribute";
 
 export interface DiscoveredField {
   name: string;

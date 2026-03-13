@@ -69,10 +69,7 @@ export function initJsonViewerListener(): void {
   }) as EventListener);
 }
 
-function openJsonViewer(
-  fields: DiscoveredField[],
-  config: GrayToolConfig,
-): void {
+function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig): void {
   // Close existing viewer if open
   closeJsonViewer();
 
@@ -174,9 +171,7 @@ function createViewerPanel(
     // Focus search with "/"
     if (e.key === "/" && !isInputFocused()) {
       e.preventDefault();
-      const searchInput = panel.querySelector(
-        ".gt-json-search",
-      ) as HTMLInputElement | null;
+      const searchInput = panel.querySelector(".gt-json-search") as HTMLInputElement | null;
       searchInput?.focus();
       return;
     }
@@ -236,11 +231,7 @@ function createHeader(panel: HTMLElement): HTMLElement {
   actions.className = "gt-json-header-actions";
 
   // Close
-  const closeBtn = createHeaderBtn(
-    '<i class="fas fa-times fa-fw"></i>',
-    "Close",
-    closeJsonViewer,
-  );
+  const closeBtn = createHeaderBtn('<i class="fas fa-times fa-fw"></i>', "Close", closeJsonViewer);
   actions.appendChild(closeBtn);
 
   header.appendChild(title);
@@ -248,11 +239,7 @@ function createHeader(panel: HTMLElement): HTMLElement {
   return header;
 }
 
-function createHeaderBtn(
-  icon: string,
-  title: string,
-  onClick: () => void,
-): HTMLButtonElement {
+function createHeaderBtn(icon: string, title: string, onClick: () => void): HTMLButtonElement {
   const btn = document.createElement("button");
   btn.className = "gt-json-header-btn";
   btn.innerHTML = icon;
@@ -353,8 +340,7 @@ function createToolbar(
   copyAllBtn.className = "gt-json-copy-all-btn";
   copyAllBtn.textContent = "Copy All";
   copyAllBtn.addEventListener("click", () => {
-    const content =
-      typeof data === "object" ? JSON.stringify(data, null, 2) : rawContent;
+    const content = typeof data === "object" ? JSON.stringify(data, null, 2) : rawContent;
     copyToClipboard(content).then(() => {
       showNotification("Copied to clipboard", "success");
     });
@@ -373,50 +359,24 @@ function renderJsonTree(container: HTMLElement, data: unknown): void {
   container.appendChild(fragment);
 }
 
-function renderValue(
-  parent: Node,
-  value: unknown,
-  path: string,
-  indent: number,
-): void {
+function renderValue(parent: Node, value: unknown, path: string, indent: number): void {
   if (value === null) {
     appendPrimitive(parent, "null", "gt-json-null", path, indent);
     return;
   }
 
   if (typeof value === "string") {
-    appendPrimitive(
-      parent,
-      `"${escapeHtml(value)}"`,
-      "gt-json-string",
-      path,
-      indent,
-      value,
-    );
+    appendPrimitive(parent, `"${escapeHtml(value)}"`, "gt-json-string", path, indent, value);
     return;
   }
 
   if (typeof value === "number") {
-    appendPrimitive(
-      parent,
-      String(value),
-      "gt-json-number",
-      path,
-      indent,
-      String(value),
-    );
+    appendPrimitive(parent, String(value), "gt-json-number", path, indent, String(value));
     return;
   }
 
   if (typeof value === "boolean") {
-    appendPrimitive(
-      parent,
-      String(value),
-      "gt-json-boolean",
-      path,
-      indent,
-      String(value),
-    );
+    appendPrimitive(parent, String(value), "gt-json-boolean", path, indent, String(value));
     return;
   }
 
@@ -431,13 +391,7 @@ function renderValue(
   }
 
   // Fallback
-  appendPrimitive(
-    parent,
-    escapeHtml(String(value)),
-    "gt-json-string",
-    path,
-    indent,
-  );
+  appendPrimitive(parent, escapeHtml(String(value)), "gt-json-string", path, indent);
 }
 
 function appendPrimitive(
@@ -544,10 +498,7 @@ function renderObject(
       const valSpan = renderInlineValue(val, childPath);
       keyContent.appendChild(valSpan);
       if (!isLast)
-        keyContent.insertAdjacentHTML(
-          "beforeend",
-          '<span class="gt-json-punctuation">,</span>',
-        );
+        keyContent.insertAdjacentHTML("beforeend", '<span class="gt-json-punctuation">,</span>');
 
       // Actions
       const actions = createRowActions(childPath, String(val ?? "null"), key);
@@ -579,12 +530,7 @@ function renderObject(
   parent.appendChild(closeRow);
 }
 
-function renderArray(
-  parent: Node,
-  arr: unknown[],
-  path: string,
-  indent: number,
-): void {
+function renderArray(parent: Node, arr: unknown[], path: string, indent: number): void {
   if (arr.length === 0) {
     const row = document.createElement("div");
     row.className = "gt-json-row";
@@ -665,11 +611,7 @@ function renderInlineValue(value: unknown, _path: string): HTMLSpanElement {
 
 // ─── Row Actions ──────────────────────────────────────────────
 
-function createRowActions(
-  path: string,
-  value: string,
-  fieldName?: string,
-): HTMLElement {
+function createRowActions(path: string, value: string, fieldName?: string): HTMLElement {
   const actions = document.createElement("div");
   actions.className = "gt-json-row-actions";
 
@@ -814,10 +756,7 @@ function removeHighlights(el: HTMLElement): void {
   el.querySelectorAll(".gt-highlight").forEach((mark) => {
     const parent = mark.parentNode;
     if (parent) {
-      parent.replaceChild(
-        document.createTextNode(mark.textContent || ""),
-        mark,
-      );
+      parent.replaceChild(document.createTextNode(mark.textContent || ""), mark);
       parent.normalize();
     }
   });
@@ -879,9 +818,7 @@ function createTabs(
         saveTabsCollapsedState(false);
       }
 
-      tabBar
-        .querySelectorAll(".gt-tab")
-        .forEach((t) => t.classList.remove("gt-active"));
+      tabBar.querySelectorAll(".gt-tab").forEach((t) => t.classList.remove("gt-active"));
       tabPanels.forEach((p) => p.classList.remove("gt-active"));
       tab.classList.add("gt-active");
       panel.classList.add("gt-active");

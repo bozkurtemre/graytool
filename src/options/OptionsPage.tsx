@@ -2,7 +2,16 @@
 // Graylog-styled settings page for the Chrome extension
 
 import React, { useState, useEffect } from "react";
-import type { GrayToolConfig, UrlPattern, ButtonConfig, AppSettings, GlobalFieldConfig, ButtonColor, ButtonCondition, ButtonConditionOperator } from "../shared/types";
+import type {
+  GrayToolConfig,
+  UrlPattern,
+  ButtonConfig,
+  AppSettings,
+  GlobalFieldConfig,
+  ButtonColor,
+  ButtonCondition,
+  ButtonConditionOperator,
+} from "../shared/types";
 import { getConfig, getDefaultConfig, saveConfig } from "../shared/storage";
 
 // ─── SVG Icons ────────────────────────────────────────────────────────
@@ -12,26 +21,74 @@ const GraytoolLogo: React.FC = () => (
 );
 
 const CircleInfoIcon: React.FC = () => (
-  <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle-info" className="svg-inline--fa fa-circle-info" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-    <path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"></path>
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    data-prefix="fas"
+    data-icon="circle-info"
+    className="svg-inline--fa fa-circle-info"
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+  >
+    <path
+      fill="currentColor"
+      d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"
+    ></path>
   </svg>
 );
 
 const PlusIcon: React.FC = () => (
-  <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="plus" className="svg-inline--fa fa-plus" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-    <path fill="currentColor" d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"></path>
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    data-prefix="fas"
+    data-icon="plus"
+    className="svg-inline--fa fa-plus"
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 448 512"
+  >
+    <path
+      fill="currentColor"
+      d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"
+    ></path>
   </svg>
 );
 
 const TrashIcon: React.FC = () => (
-  <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="trash" className="svg-inline--fa fa-trash" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-    <path fill="currentColor" d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z"></path>
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    data-prefix="fas"
+    data-icon="trash"
+    className="svg-inline--fa fa-trash"
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 448 512"
+  >
+    <path
+      fill="currentColor"
+      d="M135.2 17.7C140.6 6.8 151.7 0 163.8 0H284.2c12.1 0 23.2 6.8 28.6 17.7L320 32h96c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 96 0 81.7 0 64S14.3 32 32 32h96l7.2-14.3zM32 128H416V448c0 35.3-28.7 64-64 64H96c-35.3 0-64-28.7-64-64V128zm96 64c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16zm96 0c-8.8 0-16 7.2-16 16V432c0 8.8 7.2 16 16 16s16-7.2 16-16V208c0-8.8-7.2-16-16-16z"
+    ></path>
   </svg>
 );
 
 const EditIcon: React.FC = () => (
-  <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="pen" className="svg-inline--fa fa-pen" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-    <path fill="currentColor" d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.4-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"></path>
+  <svg
+    aria-hidden="true"
+    focusable="false"
+    data-prefix="fas"
+    data-icon="pen"
+    className="svg-inline--fa fa-pen"
+    role="img"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+  >
+    <path
+      fill="currentColor"
+      d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.4-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"
+    ></path>
   </svg>
 );
 
@@ -47,14 +104,19 @@ export const OptionsPage: React.FC = () => {
   const [config, setConfig] = useState<GrayToolConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<"patterns" | "buttons" | "settings" | "fields" | "help">("patterns");
+  const [activeTab, setActiveTab] = useState<
+    "patterns" | "buttons" | "settings" | "fields" | "help"
+  >("patterns");
   const [editingButton, setEditingButton] = useState<ButtonConfig | null>(null);
   const [editingPattern, setEditingPattern] = useState<UrlPattern | null>(null);
   const [buttonSearch, setButtonSearch] = useState("");
   const [buttonPatternFilter, setButtonPatternFilter] = useState<string>("all");
   const [patternSearch, setPatternSearch] = useState("");
   const [importText, setImportText] = useState("");
-  const [importStatus, setImportStatus] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const [importStatus, setImportStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   // Load config on mount
   useEffect(() => {
@@ -103,7 +165,7 @@ export const OptionsPage: React.FC = () => {
         if (!granted) {
           setImportStatus({
             type: "error",
-            message: "Permission denied. The extension will not work on this URL pattern."
+            message: "Permission denied. The extension will not work on this URL pattern.",
           });
           return;
         }
@@ -133,7 +195,7 @@ export const OptionsPage: React.FC = () => {
   const handleTogglePattern = (id: string) => {
     if (!config) return;
     const newPatterns = config.urlPatterns.map((p) =>
-      p.id === id ? { ...p, enabled: !p.enabled } : p
+      p.id === id ? { ...p, enabled: !p.enabled } : p,
     );
     handleSave({ urlPatterns: newPatterns });
   };
@@ -177,9 +239,7 @@ export const OptionsPage: React.FC = () => {
 
   const handleToggleButton = (id: string) => {
     if (!config) return;
-    const newButtons = config.buttons.map((b) =>
-      b.id === id ? { ...b, enabled: !b.enabled } : b
-    );
+    const newButtons = config.buttons.map((b) => (b.id === id ? { ...b, enabled: !b.enabled } : b));
     handleSave({ buttons: newButtons });
   };
 
@@ -231,7 +291,10 @@ export const OptionsPage: React.FC = () => {
 
   // ─── Field Config ────────────────────────────────────────────────────
 
-  const handleFieldConfigChange = (key: keyof GlobalFieldConfig, value: string | string[] | null) => {
+  const handleFieldConfigChange = (
+    key: keyof GlobalFieldConfig,
+    value: string | string[] | null,
+  ) => {
     if (!config) return;
     handleSave({ globalFieldConfig: { ...config.globalFieldConfig, [key]: value } });
   };
@@ -245,7 +308,9 @@ export const OptionsPage: React.FC = () => {
 
     return {
       version: 2,
-      urlPatterns: Array.isArray(data.urlPatterns) ? (data.urlPatterns as UrlPattern[]) : defaults.urlPatterns,
+      urlPatterns: Array.isArray(data.urlPatterns)
+        ? (data.urlPatterns as UrlPattern[])
+        : defaults.urlPatterns,
       buttons: Array.isArray(data.buttons) ? (data.buttons as ButtonConfig[]) : defaults.buttons,
       globalFieldConfig: {
         ...defaults.globalFieldConfig,
@@ -294,9 +359,7 @@ export const OptionsPage: React.FC = () => {
     }
 
     // Request permissions for imported URL patterns
-    const patternsToRequest = sanitized.urlPatterns
-      .filter((p) => p.pattern)
-      .map((p) => p.pattern);
+    const patternsToRequest = sanitized.urlPatterns.filter((p) => p.pattern).map((p) => p.pattern);
 
     if (patternsToRequest.length > 0) {
       try {
@@ -306,7 +369,7 @@ export const OptionsPage: React.FC = () => {
         if (!granted) {
           setImportStatus({
             type: "error",
-            message: "Permission denied. The extension will not work on the imported URL patterns."
+            message: "Permission denied. The extension will not work on the imported URL patterns.",
           });
           return;
         }
@@ -338,7 +401,10 @@ export const OptionsPage: React.FC = () => {
     try {
       const text = await file.text();
       setImportText(text);
-      setImportStatus({ type: "success", message: "File loaded. Review and click Import JSON to apply." });
+      setImportStatus({
+        type: "success",
+        message: "File loaded. Review and click Import JSON to apply.",
+      });
     } catch (error) {
       console.error("Failed to read import file:", error);
       setImportStatus({ type: "error", message: "Failed to read file." });
@@ -354,9 +420,7 @@ export const OptionsPage: React.FC = () => {
       <div className="gl-page">
         <div className="gl-main-content">
           <div className="gl-content-wrapper">
-            <div style={{ textAlign: "center", padding: "40px" }}>
-              Loading configuration...
-            </div>
+            <div style={{ textAlign: "center", padding: "40px" }}>Loading configuration...</div>
           </div>
         </div>
       </div>
@@ -393,9 +457,10 @@ export const OptionsPage: React.FC = () => {
     // Filter by search text
     if (buttonSearch.trim()) {
       const searchLower = buttonSearch.toLowerCase();
-      filtered = filtered.filter((button) =>
-        button.label.toLowerCase().includes(searchLower) ||
-        button.url.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (button) =>
+          button.label.toLowerCase().includes(searchLower) ||
+          button.url.toLowerCase().includes(searchLower),
       );
     }
 
@@ -419,9 +484,10 @@ export const OptionsPage: React.FC = () => {
   const getFilteredPatterns = (): UrlPattern[] => {
     if (!patternSearch.trim()) return config.urlPatterns;
     const searchLower = patternSearch.toLowerCase();
-    return config.urlPatterns.filter((pattern) =>
-      (pattern.label || "").toLowerCase().includes(searchLower) ||
-      pattern.pattern.toLowerCase().includes(searchLower)
+    return config.urlPatterns.filter(
+      (pattern) =>
+        (pattern.label || "").toLowerCase().includes(searchLower) ||
+        pattern.pattern.toLowerCase().includes(searchLower),
     );
   };
 
@@ -432,35 +498,65 @@ export const OptionsPage: React.FC = () => {
       {/* Navigation */}
       <nav className="gl-navbar navbar navbar-default navbar-fixed-top">
         <div className="container-fluid">
-        <div className="navbar-header">
-          <a className="gl-navbar-brand navbar-brand" href="/options/options.html">
-            <GraytoolLogo />
-          </a>
-        </div>
+          <div className="navbar-header">
+            <a className="gl-navbar-brand navbar-brand" href="/options/options.html">
+              <GraytoolLogo />
+            </a>
+          </div>
           <div className="navbar-collapse collapse">
             <ul className="gl-navbar-main nav navbar-nav">
               <li className={activeTab === "patterns" ? "active" : ""}>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab("patterns"); }}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab("patterns");
+                  }}
+                >
                   <div className="gl-nav-item-state-indicator">URL Patterns</div>
                 </a>
               </li>
               <li className={activeTab === "buttons" ? "active" : ""}>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab("buttons"); }}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab("buttons");
+                  }}
+                >
                   <div className="gl-nav-item-state-indicator">Buttons</div>
                 </a>
               </li>
               <li className={activeTab === "fields" ? "active" : ""}>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab("fields"); }}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab("fields");
+                  }}
+                >
                   <div className="gl-nav-item-state-indicator">Field Config</div>
                 </a>
               </li>
               <li className={activeTab === "settings" ? "active" : ""}>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab("settings"); }}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab("settings");
+                  }}
+                >
                   <div className="gl-nav-item-state-indicator">Settings</div>
                 </a>
               </li>
               <li className={activeTab === "help" ? "active" : ""}>
-                <a href="#" onClick={(e) => { e.preventDefault(); setActiveTab("help"); }}>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setActiveTab("help");
+                  }}
+                >
                   <div className="gl-nav-item-state-indicator">Help</div>
                 </a>
               </li>
@@ -516,8 +612,9 @@ export const OptionsPage: React.FC = () => {
                                 <span>URL Patterns</span>
                               </div>
                               <div className="gl-alert-message">
-                                Define which Graylog instances the extension should activate on. Use wildcards (*) to match multiple paths.
-                                Example: <code>https://graylog.company.com/*</code>
+                                Define which Graylog instances the extension should activate on. Use
+                                wildcards (*) to match multiple paths. Example:{" "}
+                                <code>https://graylog.company.com/*</code>
                               </div>
                             </div>
                           </div>
@@ -549,7 +646,9 @@ export const OptionsPage: React.FC = () => {
                         )}
 
                         {config.urlPatterns.length === 0 ? (
-                          <p className="gl-help-block">No URL patterns configured. Add one to get started.</p>
+                          <p className="gl-help-block">
+                            No URL patterns configured. Add one to get started.
+                          </p>
                         ) : filteredPatterns.length === 0 ? (
                           <p className="gl-help-block">No patterns match your search.</p>
                         ) : (
@@ -557,7 +656,9 @@ export const OptionsPage: React.FC = () => {
                             {filteredPatterns.map((pattern) => (
                               <div key={pattern.id} className="gl-list-item">
                                 <div className="gl-list-item-content">
-                                  <div className="gl-list-item-title">{pattern.label || "Unnamed Pattern"}</div>
+                                  <div className="gl-list-item-title">
+                                    {pattern.label || "Unnamed Pattern"}
+                                  </div>
                                   <div className="gl-list-item-subtitle">{pattern.pattern}</div>
                                 </div>
                                 <div className="gl-list-item-actions">
@@ -569,10 +670,18 @@ export const OptionsPage: React.FC = () => {
                                     />
                                     <span className="slider"></span>
                                   </label>
-                                  <button className="gl-btn-icon" onClick={() => setEditingPattern(pattern)} title="Edit">
+                                  <button
+                                    className="gl-btn-icon"
+                                    onClick={() => setEditingPattern(pattern)}
+                                    title="Edit"
+                                  >
                                     <EditIcon />
                                   </button>
-                                  <button className="gl-btn-icon gl-btn-icon-danger" onClick={() => handleDeletePattern(pattern.id)} title="Delete">
+                                  <button
+                                    className="gl-btn-icon gl-btn-icon-danger"
+                                    onClick={() => handleDeletePattern(pattern.id)}
+                                    title="Delete"
+                                  >
                                     <TrashIcon />
                                   </button>
                                 </div>
@@ -588,43 +697,67 @@ export const OptionsPage: React.FC = () => {
                       <div className="gl-modal-overlay" onClick={() => setEditingPattern(null)}>
                         <div className="gl-modal" onClick={(e) => e.stopPropagation()}>
                           <div className="gl-modal-header">
-                            <h2>{editingPattern.id.startsWith("id-") ? "Edit Pattern" : "Add Pattern"}</h2>
+                            <h2>
+                              {editingPattern.id.startsWith("id-") ? "Edit Pattern" : "Add Pattern"}
+                            </h2>
                           </div>
                           <div className="gl-modal-body">
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">Label</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                Label
+                              </label>
                               <div className="col-sm-9">
                                 <input
                                   type="text"
                                   className="gl-form-control form-control"
                                   value={editingPattern.label}
-                                  onChange={(e) => setEditingPattern({ ...editingPattern, label: e.target.value })}
+                                  onChange={(e) =>
+                                    setEditingPattern({ ...editingPattern, label: e.target.value })
+                                  }
                                   placeholder="Production Graylog"
                                 />
                                 <span className="gl-help-block help-block">
-                                  <span className="gl-help-text">A friendly name for this pattern.</span>
+                                  <span className="gl-help-text">
+                                    A friendly name for this pattern.
+                                  </span>
                                 </span>
                               </div>
                             </div>
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">URL Pattern</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                URL Pattern
+                              </label>
                               <div className="col-sm-9">
                                 <input
                                   type="text"
                                   className="gl-form-control form-control"
                                   value={editingPattern.pattern}
-                                  onChange={(e) => setEditingPattern({ ...editingPattern, pattern: e.target.value })}
+                                  onChange={(e) =>
+                                    setEditingPattern({
+                                      ...editingPattern,
+                                      pattern: e.target.value,
+                                    })
+                                  }
                                   placeholder="https://graylog.company.com/*"
                                 />
                                 <span className="gl-help-block help-block">
-                                  <span className="gl-help-text">URL pattern with optional wildcard (*).</span>
+                                  <span className="gl-help-text">
+                                    URL pattern with optional wildcard (*).
+                                  </span>
                                 </span>
                               </div>
                             </div>
                           </div>
                           <div className="gl-modal-footer">
-                            <button className="gl-btn btn btn-default" onClick={() => setEditingPattern(null)}>Cancel</button>
-                            <button className="gl-btn btn btn-success" onClick={handleSavePattern}>Save Pattern</button>
+                            <button
+                              className="gl-btn btn btn-default"
+                              onClick={() => setEditingPattern(null)}
+                            >
+                              Cancel
+                            </button>
+                            <button className="gl-btn btn btn-success" onClick={handleSavePattern}>
+                              Save Pattern
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -648,8 +781,9 @@ export const OptionsPage: React.FC = () => {
                                 <span>Action Buttons</span>
                               </div>
                               <div className="gl-alert-message">
-                                Configure buttons that appear on log rows. Use field bindings to insert log data into URLs.
-                                Example URL: <code>https://admin.company.com/users/{`{userId}`}</code>
+                                Configure buttons that appear on log rows. Use field bindings to
+                                insert log data into URLs. Example URL:{" "}
+                                <code>https://admin.company.com/users/{`{userId}`}</code>
                               </div>
                             </div>
                           </div>
@@ -669,8 +803,19 @@ export const OptionsPage: React.FC = () => {
 
                         {/* Search and Filter */}
                         {config.buttons.length > 0 && (
-                          <div style={{ display: "flex", gap: "12px", marginTop: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
-                            <div className="gl-form-group" style={{ flex: "1", minWidth: "200px", marginBottom: 0 }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "12px",
+                              marginTop: "16px",
+                              marginBottom: "16px",
+                              flexWrap: "wrap",
+                            }}
+                          >
+                            <div
+                              className="gl-form-group"
+                              style={{ flex: "1", minWidth: "200px", marginBottom: 0 }}
+                            >
                               <input
                                 type="text"
                                 className="gl-form-control form-control"
@@ -679,7 +824,10 @@ export const OptionsPage: React.FC = () => {
                                 onChange={(e) => setButtonSearch(e.target.value)}
                               />
                             </div>
-                            <div className="gl-form-group" style={{ width: "200px", marginBottom: 0 }}>
+                            <div
+                              className="gl-form-group"
+                              style={{ width: "200px", marginBottom: 0 }}
+                            >
                               <select
                                 className="gl-select form-control"
                                 value={buttonPatternFilter}
@@ -698,7 +846,9 @@ export const OptionsPage: React.FC = () => {
                         )}
 
                         {config.buttons.length === 0 ? (
-                          <p className="gl-help-block">No buttons configured. Add one to get started.</p>
+                          <p className="gl-help-block">
+                            No buttons configured. Add one to get started.
+                          </p>
                         ) : filteredButtons.length === 0 ? (
                           <p className="gl-help-block">No buttons match your search criteria.</p>
                         ) : (
@@ -707,14 +857,38 @@ export const OptionsPage: React.FC = () => {
                               <div key={button.id} className="gl-list-item">
                                 <div className="gl-list-item-content">
                                   <div className="gl-list-item-title">
-                                    <span className={`gl-badge gl-badge-${button.color}`}>{button.label || "Unnamed Button"}</span>
+                                    <span className={`gl-badge gl-badge-${button.color}`}>
+                                      {button.label || "Unnamed Button"}
+                                    </span>
                                   </div>
-                                  <div className="gl-list-item-subtitle" style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "6px" }}>
+                                  <div
+                                    className="gl-list-item-subtitle"
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      flexWrap: "wrap",
+                                      gap: "6px",
+                                    }}
+                                  >
                                     <span>{button.url || "No URL configured"}</span>
-                                    {button.url && <span style={{ color: "var(--gl-text-muted)" }}>•</span>}
+                                    {button.url && (
+                                      <span style={{ color: "var(--gl-text-muted)" }}>•</span>
+                                    )}
                                     <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                                       {getPatternLabels(button.urlPatternIds).map((label, idx) => (
-                                        <span key={idx} style={{ backgroundColor: "rgba(41, 121, 255, 0.14)", color: "#8fb5ff", border: "1px solid rgba(41, 121, 255, 0.45)", borderRadius: "12px", fontSize: "10px", padding: "1px 6px", whiteSpace: "nowrap", fontWeight: 600 }}>
+                                        <span
+                                          key={idx}
+                                          style={{
+                                            backgroundColor: "rgba(41, 121, 255, 0.14)",
+                                            color: "#8fb5ff",
+                                            border: "1px solid rgba(41, 121, 255, 0.45)",
+                                            borderRadius: "12px",
+                                            fontSize: "10px",
+                                            padding: "1px 6px",
+                                            whiteSpace: "nowrap",
+                                            fontWeight: 600,
+                                          }}
+                                        >
                                           {label}
                                         </span>
                                       ))}
@@ -730,10 +904,18 @@ export const OptionsPage: React.FC = () => {
                                     />
                                     <span className="slider"></span>
                                   </label>
-                                  <button className="gl-btn-icon" onClick={() => setEditingButton(button)} title="Edit">
+                                  <button
+                                    className="gl-btn-icon"
+                                    onClick={() => setEditingButton(button)}
+                                    title="Edit"
+                                  >
                                     <EditIcon />
                                   </button>
-                                  <button className="gl-btn-icon gl-btn-icon-danger" onClick={() => handleDeleteButton(button.id)} title="Delete">
+                                  <button
+                                    className="gl-btn-icon gl-btn-icon-danger"
+                                    onClick={() => handleDeleteButton(button.id)}
+                                    title="Delete"
+                                  >
                                     <TrashIcon />
                                   </button>
                                 </div>
@@ -747,45 +929,69 @@ export const OptionsPage: React.FC = () => {
                     {/* Button Edit Modal */}
                     {editingButton && (
                       <div className="gl-modal-overlay" onClick={() => setEditingButton(null)}>
-                        <div className="gl-modal gl-modal-large" onClick={(e) => e.stopPropagation()}>
+                        <div
+                          className="gl-modal gl-modal-large"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <div className="gl-modal-header">
-                            <h2>{config.buttons.find((b) => b.id === editingButton.id) ? "Edit Button" : "Add Button"}</h2>
+                            <h2>
+                              {config.buttons.find((b) => b.id === editingButton.id)
+                                ? "Edit Button"
+                                : "Add Button"}
+                            </h2>
                           </div>
                           <div className="gl-modal-body">
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">Label</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                Label
+                              </label>
                               <div className="col-sm-9">
                                 <input
                                   type="text"
                                   className="gl-form-control form-control"
                                   value={editingButton.label}
-                                  onChange={(e) => setEditingButton({ ...editingButton, label: e.target.value })}
+                                  onChange={(e) =>
+                                    setEditingButton({ ...editingButton, label: e.target.value })
+                                  }
                                   placeholder="View User"
                                 />
                               </div>
                             </div>
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">URL Template</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                URL Template
+                              </label>
                               <div className="col-sm-9">
                                 <input
                                   type="text"
                                   className="gl-form-control form-control"
                                   value={editingButton.url}
-                                  onChange={(e) => setEditingButton({ ...editingButton, url: e.target.value })}
+                                  onChange={(e) =>
+                                    setEditingButton({ ...editingButton, url: e.target.value })
+                                  }
                                   placeholder="https://admin.company.com/users/{userId}"
                                 />
                                 <span className="gl-help-block help-block">
-                                  <span className="gl-help-text">Use {`{fieldName}`} placeholders for dynamic values.</span>
+                                  <span className="gl-help-text">
+                                    Use {`{fieldName}`} placeholders for dynamic values.
+                                  </span>
                                 </span>
                               </div>
                             </div>
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">Color</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                Color
+                              </label>
                               <div className="col-sm-9">
                                 <select
                                   className="gl-select form-control"
                                   value={editingButton.color}
-                                  onChange={(e) => setEditingButton({ ...editingButton, color: e.target.value as ButtonColor })}
+                                  onChange={(e) =>
+                                    setEditingButton({
+                                      ...editingButton,
+                                      color: e.target.value as ButtonColor,
+                                    })
+                                  }
                                 >
                                   <option value="primary">Primary (Blue)</option>
                                   <option value="success">Success (Green)</option>
@@ -798,11 +1004,17 @@ export const OptionsPage: React.FC = () => {
 
                             {/* URL Pattern Selection */}
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">URL Patterns</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                URL Patterns
+                              </label>
                               <div className="col-sm-9">
                                 <div style={{ marginBottom: "8px" }}>
-                                  <span className="gl-help-text" style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}>
-                                    Select which URL patterns this button should appear on. Leave empty for all patterns.
+                                  <span
+                                    className="gl-help-text"
+                                    style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}
+                                  >
+                                    Select which URL patterns this button should appear on. Leave
+                                    empty for all patterns.
                                   </span>
                                 </div>
                                 {config.urlPatterns.length === 0 ? (
@@ -820,7 +1032,9 @@ export const OptionsPage: React.FC = () => {
                                           alignItems: "center",
                                           gap: "6px",
                                           padding: "6px 12px",
-                                          backgroundColor: (editingButton.urlPatternIds || []).includes(pattern.id)
+                                          backgroundColor: (
+                                            editingButton.urlPatternIds || []
+                                          ).includes(pattern.id)
                                             ? "var(--gl-btn-primary)"
                                             : "var(--gl-bg-tertiary)",
                                           border: "1px solid var(--gl-border-color)",
@@ -832,7 +1046,9 @@ export const OptionsPage: React.FC = () => {
                                       >
                                         <input
                                           type="checkbox"
-                                          checked={(editingButton.urlPatternIds || []).includes(pattern.id)}
+                                          checked={(editingButton.urlPatternIds || []).includes(
+                                            pattern.id,
+                                          )}
                                           onChange={() => handleToggleUrlPatternId(pattern.id)}
                                           style={{ display: "none" }}
                                         />
@@ -846,10 +1062,15 @@ export const OptionsPage: React.FC = () => {
 
                             {/* Conditions */}
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">Conditions</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                Conditions
+                              </label>
                               <div className="col-sm-9">
                                 <div style={{ marginBottom: "8px" }}>
-                                  <span className="gl-help-text" style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}>
+                                  <span
+                                    className="gl-help-text"
+                                    style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}
+                                  >
                                     Button will only appear when all conditions are met.
                                   </span>
                                 </div>
@@ -870,13 +1091,19 @@ export const OptionsPage: React.FC = () => {
                                       style={{ flex: "1" }}
                                       placeholder="Field name"
                                       value={condition.field}
-                                      onChange={(e) => handleUpdateCondition(index, { field: e.target.value })}
+                                      onChange={(e) =>
+                                        handleUpdateCondition(index, { field: e.target.value })
+                                      }
                                     />
                                     <select
                                       className="gl-select form-control"
                                       style={{ width: "120px" }}
                                       value={condition.operator}
-                                      onChange={(e) => handleUpdateCondition(index, { operator: e.target.value as ButtonConditionOperator })}
+                                      onChange={(e) =>
+                                        handleUpdateCondition(index, {
+                                          operator: e.target.value as ButtonConditionOperator,
+                                        })
+                                      }
                                     >
                                       <option value="exists">Exists</option>
                                       <option value="equals">Equals</option>
@@ -891,7 +1118,9 @@ export const OptionsPage: React.FC = () => {
                                         style={{ flex: "1" }}
                                         placeholder="Value"
                                         value={condition.value || ""}
-                                        onChange={(e) => handleUpdateCondition(index, { value: e.target.value })}
+                                        onChange={(e) =>
+                                          handleUpdateCondition(index, { value: e.target.value })
+                                        }
                                       />
                                     )}
                                     <button
@@ -908,7 +1137,11 @@ export const OptionsPage: React.FC = () => {
                                 <button
                                   type="button"
                                   className="gl-btn btn btn-default"
-                                  style={{ marginTop: "8px", fontSize: "13px", padding: "6px 12px" }}
+                                  style={{
+                                    marginTop: "8px",
+                                    fontSize: "13px",
+                                    padding: "6px 12px",
+                                  }}
                                   onClick={handleAddCondition}
                                 >
                                   <PlusIcon /> Add Condition
@@ -918,14 +1151,21 @@ export const OptionsPage: React.FC = () => {
 
                             {/* Options */}
                             <div className="gl-form-group form-group">
-                              <label className="gl-control-label col-sm-3 control-label">Options</label>
+                              <label className="gl-control-label col-sm-3 control-label">
+                                Options
+                              </label>
                               <div className="col-sm-9">
                                 <div className="checkbox">
                                   <label>
                                     <input
                                       type="checkbox"
                                       checked={editingButton.openInNewTab}
-                                      onChange={(e) => setEditingButton({ ...editingButton, openInNewTab: e.target.checked })}
+                                      onChange={(e) =>
+                                        setEditingButton({
+                                          ...editingButton,
+                                          openInNewTab: e.target.checked,
+                                        })
+                                      }
                                     />
                                     Open in new tab
                                   </label>
@@ -935,7 +1175,12 @@ export const OptionsPage: React.FC = () => {
                                     <input
                                       type="checkbox"
                                       checked={editingButton.enabled}
-                                      onChange={(e) => setEditingButton({ ...editingButton, enabled: e.target.checked })}
+                                      onChange={(e) =>
+                                        setEditingButton({
+                                          ...editingButton,
+                                          enabled: e.target.checked,
+                                        })
+                                      }
                                     />
                                     Enabled
                                   </label>
@@ -944,8 +1189,15 @@ export const OptionsPage: React.FC = () => {
                             </div>
                           </div>
                           <div className="gl-modal-footer">
-                            <button className="gl-btn btn btn-default" onClick={() => setEditingButton(null)}>Cancel</button>
-                            <button className="gl-btn btn btn-success" onClick={handleSaveButton}>Save Button</button>
+                            <button
+                              className="gl-btn btn btn-default"
+                              onClick={() => setEditingButton(null)}
+                            >
+                              Cancel
+                            </button>
+                            <button className="gl-btn btn btn-success" onClick={handleSaveButton}>
+                              Save Button
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -962,32 +1214,53 @@ export const OptionsPage: React.FC = () => {
                       </div>
                       <form className="gl-form form-horizontal">
                         <div className="gl-form-group form-group">
-                          <label className="gl-control-label col-sm-3 control-label">Default Message Field</label>
+                          <label className="gl-control-label col-sm-3 control-label">
+                            Default Message Field
+                          </label>
                           <div className="col-sm-9">
                             <input
                               type="text"
                               className="gl-form-control form-control"
                               value={config.globalFieldConfig.defaultMessageField || ""}
-                              onChange={(e) => handleFieldConfigChange("defaultMessageField", e.target.value || null)}
+                              onChange={(e) =>
+                                handleFieldConfigChange(
+                                  "defaultMessageField",
+                                  e.target.value || null,
+                                )
+                              }
                               placeholder="Auto-detect"
                             />
                             <span className="gl-help-block help-block">
-                              <span className="gl-help-text">The field to parse for JSON content. Leave empty for auto-detection.</span>
+                              <span className="gl-help-text">
+                                The field to parse for JSON content. Leave empty for auto-detection.
+                              </span>
                             </span>
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
-                          <label className="gl-control-label col-sm-3 control-label">Field Prefixes</label>
+                          <label className="gl-control-label col-sm-3 control-label">
+                            Field Prefixes
+                          </label>
                           <div className="col-sm-9">
                             <input
                               type="text"
                               className="gl-form-control form-control"
                               value={config.globalFieldConfig.rowFieldPrefixes.join(", ")}
-                              onChange={(e) => handleFieldConfigChange("rowFieldPrefixes", e.target.value.split(",").map((s) => s.trim()).filter(Boolean))}
+                              onChange={(e) =>
+                                handleFieldConfigChange(
+                                  "rowFieldPrefixes",
+                                  e.target.value
+                                    .split(",")
+                                    .map((s) => s.trim())
+                                    .filter(Boolean),
+                                )
+                              }
                               placeholder="msg., context., "
                             />
                             <span className="gl-help-block help-block">
-                              <span className="gl-help-text">Comma-separated list of field prefixes to search.</span>
+                              <span className="gl-help-text">
+                                Comma-separated list of field prefixes to search.
+                              </span>
                             </span>
                           </div>
                         </div>
@@ -1005,7 +1278,9 @@ export const OptionsPage: React.FC = () => {
                       </div>
                       <form className="gl-form form-horizontal">
                         <div className="gl-form-group form-group">
-                          <label className="gl-control-label col-sm-3 control-label">Extension</label>
+                          <label className="gl-control-label col-sm-3 control-label">
+                            Extension
+                          </label>
                           <div className="col-sm-9">
                             <div className="checkbox">
                               <label>
@@ -1020,14 +1295,18 @@ export const OptionsPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
-                          <label className="gl-control-label col-sm-3 control-label">Features</label>
+                          <label className="gl-control-label col-sm-3 control-label">
+                            Features
+                          </label>
                           <div className="col-sm-9">
                             <div className="checkbox">
                               <label>
                                 <input
                                   type="checkbox"
                                   checked={config.settings.showMessageDetailButton}
-                                  onChange={(e) => handleSettingChange("showMessageDetailButton", e.target.checked)}
+                                  onChange={(e) =>
+                                    handleSettingChange("showMessageDetailButton", e.target.checked)
+                                  }
                                 />
                                 Enable message detail button
                               </label>
@@ -1037,7 +1316,9 @@ export const OptionsPage: React.FC = () => {
                                 <input
                                   type="checkbox"
                                   checked={config.settings.searchHistoryEnabled !== false}
-                                  onChange={(e) => handleSettingChange("searchHistoryEnabled", e.target.checked)}
+                                  onChange={(e) =>
+                                    handleSettingChange("searchHistoryEnabled", e.target.checked)
+                                  }
                                 />
                                 Enable search history
                               </label>
@@ -1047,7 +1328,9 @@ export const OptionsPage: React.FC = () => {
                                 <input
                                   type="checkbox"
                                   checked={config.settings.jsonViewerEnabled}
-                                  onChange={(e) => handleSettingChange("jsonViewerEnabled", e.target.checked)}
+                                  onChange={(e) =>
+                                    handleSettingChange("jsonViewerEnabled", e.target.checked)
+                                  }
                                 />
                                 Enable JSON viewer
                               </label>
@@ -1057,7 +1340,12 @@ export const OptionsPage: React.FC = () => {
                                 <input
                                   type="checkbox"
                                   checked={config.settings.keyboardShortcutsEnabled}
-                                  onChange={(e) => handleSettingChange("keyboardShortcutsEnabled", e.target.checked)}
+                                  onChange={(e) =>
+                                    handleSettingChange(
+                                      "keyboardShortcutsEnabled",
+                                      e.target.checked,
+                                    )
+                                  }
                                 />
                                 Enable keyboard shortcuts
                               </label>
@@ -1065,10 +1353,16 @@ export const OptionsPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
-                          <label className="gl-control-label col-sm-3 control-label">Import / Export</label>
+                          <label className="gl-control-label col-sm-3 control-label">
+                            Import / Export
+                          </label>
                           <div className="col-sm-9">
                             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                              <button className="gl-btn btn btn-default" type="button" onClick={handleExportConfig}>
+                              <button
+                                className="gl-btn btn btn-default"
+                                type="button"
+                                onClick={handleExportConfig}
+                              >
                                 Export settings
                               </button>
                               <label className="gl-btn btn btn-default" style={{ marginBottom: 0 }}>
@@ -1091,8 +1385,19 @@ export const OptionsPage: React.FC = () => {
                                 onChange={(e) => setImportText(e.target.value)}
                               />
                             </div>
-                            <div style={{ marginTop: "8px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                              <button className="gl-btn btn btn-success" type="button" onClick={handleImportText}>
+                            <div
+                              style={{
+                                marginTop: "8px",
+                                display: "flex",
+                                gap: "8px",
+                                flexWrap: "wrap",
+                              }}
+                            >
+                              <button
+                                className="gl-btn btn btn-success"
+                                type="button"
+                                onClick={handleImportText}
+                              >
                                 Import JSON
                               </button>
                               <button
@@ -1109,13 +1414,20 @@ export const OptionsPage: React.FC = () => {
                             {importStatus && (
                               <span
                                 className="gl-help-block help-block"
-                                style={{ color: importStatus.type === "error" ? "var(--gl-btn-danger)" : "var(--gl-btn-success)" }}
+                                style={{
+                                  color:
+                                    importStatus.type === "error"
+                                      ? "var(--gl-btn-danger)"
+                                      : "var(--gl-btn-success)",
+                                }}
                               >
                                 <span className="gl-help-text">{importStatus.message}</span>
                               </span>
                             )}
                             <span className="gl-help-block help-block">
-                              <span className="gl-help-text">Importing overwrites your current settings.</span>
+                              <span className="gl-help-text">
+                                Importing overwrites your current settings.
+                              </span>
                             </span>
                           </div>
                         </div>
@@ -1134,31 +1446,113 @@ export const OptionsPage: React.FC = () => {
                           <h2>Keyboard Shortcuts</h2>
                         </div>
                         <div className="table-responsive">
-                          <table className="table table-bordered table-striped" style={{ marginTop: '16px', backgroundColor: 'var(--gt-bg-card)', borderRadius: '4px' }}>
+                          <table
+                            className="table table-bordered table-striped"
+                            style={{
+                              marginTop: "16px",
+                              backgroundColor: "var(--gt-bg-card)",
+                              borderRadius: "4px",
+                            }}
+                          >
                             <thead>
                               <tr>
-                                <th style={{ width: '30%' }}>Shortcut</th>
+                                <th style={{ width: "30%" }}>Shortcut</th>
                                 <th>Action</th>
                               </tr>
                             </thead>
                             <tbody>
                               <tr>
                                 <td>
-                                  <kbd style={{ display: 'inline-block', padding: '3px 6px', fontFamily: 'monospace', fontSize: '11px', lineHeight: '10px', color: '#444', verticalAlign: 'middle', backgroundColor: '#fcfcfc', border: 'solid 1px #ccc', borderBottomColor: '#bbb', borderRadius: '3px', boxShadow: 'inset 0 -1px 0 #bbb' }}>Ctrl/Cmd</kbd> + <kbd style={{ display: 'inline-block', padding: '3px 6px', fontFamily: 'monospace', fontSize: '11px', lineHeight: '10px', color: '#444', verticalAlign: 'middle', backgroundColor: '#fcfcfc', border: 'solid 1px #ccc', borderBottomColor: '#bbb', borderRadius: '3px', boxShadow: 'inset 0 -1px 0 #bbb' }}>H</kbd>
+                                  <kbd
+                                    style={{
+                                      display: "inline-block",
+                                      padding: "3px 6px",
+                                      fontFamily: "monospace",
+                                      fontSize: "11px",
+                                      lineHeight: "10px",
+                                      color: "#444",
+                                      verticalAlign: "middle",
+                                      backgroundColor: "#fcfcfc",
+                                      border: "solid 1px #ccc",
+                                      borderBottomColor: "#bbb",
+                                      borderRadius: "3px",
+                                      boxShadow: "inset 0 -1px 0 #bbb",
+                                    }}
+                                  >
+                                    Ctrl/Cmd
+                                  </kbd>{" "}
+                                  +{" "}
+                                  <kbd
+                                    style={{
+                                      display: "inline-block",
+                                      padding: "3px 6px",
+                                      fontFamily: "monospace",
+                                      fontSize: "11px",
+                                      lineHeight: "10px",
+                                      color: "#444",
+                                      verticalAlign: "middle",
+                                      backgroundColor: "#fcfcfc",
+                                      border: "solid 1px #ccc",
+                                      borderBottomColor: "#bbb",
+                                      borderRadius: "3px",
+                                      boxShadow: "inset 0 -1px 0 #bbb",
+                                    }}
+                                  >
+                                    H
+                                  </kbd>
                                 </td>
                                 <td>Open the Search History popup (when in Graylog).</td>
                               </tr>
                               <tr>
                                 <td>
-                                  <kbd style={{ display: 'inline-block', padding: '3px 6px', fontFamily: 'monospace', fontSize: '11px', lineHeight: '10px', color: '#444', verticalAlign: 'middle', backgroundColor: '#fcfcfc', border: 'solid 1px #ccc', borderBottomColor: '#bbb', borderRadius: '3px', boxShadow: 'inset 0 -1px 0 #bbb' }}>Esc</kbd>
+                                  <kbd
+                                    style={{
+                                      display: "inline-block",
+                                      padding: "3px 6px",
+                                      fontFamily: "monospace",
+                                      fontSize: "11px",
+                                      lineHeight: "10px",
+                                      color: "#444",
+                                      verticalAlign: "middle",
+                                      backgroundColor: "#fcfcfc",
+                                      border: "solid 1px #ccc",
+                                      borderBottomColor: "#bbb",
+                                      borderRadius: "3px",
+                                      boxShadow: "inset 0 -1px 0 #bbb",
+                                    }}
+                                  >
+                                    Esc
+                                  </kbd>
                                 </td>
-                                <td>Close open overlays (Search History, JSON Viewer, Field Selector).</td>
+                                <td>
+                                  Close open overlays (Search History, JSON Viewer, Field Selector).
+                                </td>
                               </tr>
                               <tr>
                                 <td>
-                                  <kbd style={{ display: 'inline-block', padding: '3px 6px', fontFamily: 'monospace', fontSize: '11px', lineHeight: '10px', color: '#444', verticalAlign: 'middle', backgroundColor: '#fcfcfc', border: 'solid 1px #ccc', borderBottomColor: '#bbb', borderRadius: '3px', boxShadow: 'inset 0 -1px 0 #bbb' }}>Enter</kbd>
+                                  <kbd
+                                    style={{
+                                      display: "inline-block",
+                                      padding: "3px 6px",
+                                      fontFamily: "monospace",
+                                      fontSize: "11px",
+                                      lineHeight: "10px",
+                                      color: "#444",
+                                      verticalAlign: "middle",
+                                      backgroundColor: "#fcfcfc",
+                                      border: "solid 1px #ccc",
+                                      borderBottomColor: "#bbb",
+                                      borderRadius: "3px",
+                                      boxShadow: "inset 0 -1px 0 #bbb",
+                                    }}
+                                  >
+                                    Enter
+                                  </kbd>
                                 </td>
-                                <td>Save the current query to search history and execute search (when focusing Graylog query editor).</td>
+                                <td>
+                                  Save the current query to search history and execute search (when
+                                  focusing Graylog query editor).
+                                </td>
                               </tr>
                             </tbody>
                           </table>
@@ -1166,7 +1560,7 @@ export const OptionsPage: React.FC = () => {
                       </div>
                     </div>
 
-                   {/* Useful Links */}
+                    {/* Useful Links */}
                     <div className="gl-content gl-row">
                       <div className="col-xs-12">
                         <div className="gl-section-header">
@@ -1185,7 +1579,9 @@ export const OptionsPage: React.FC = () => {
                                   Report an Issue
                                 </a>
                               </div>
-                              <div className="gl-list-item-subtitle">Found a bug or have a feature request? Open an issue on GitHub.</div>
+                              <div className="gl-list-item-subtitle">
+                                Found a bug or have a feature request? Open an issue on GitHub.
+                              </div>
                             </div>
                           </div>
                           <div className="gl-list-item">
@@ -1200,7 +1596,9 @@ export const OptionsPage: React.FC = () => {
                                   Documentation
                                 </a>
                               </div>
-                              <div className="gl-list-item-subtitle">Read the documentation to learn how to use Graytool effectively.</div>
+                              <div className="gl-list-item-subtitle">
+                                Read the documentation to learn how to use Graytool effectively.
+                              </div>
                             </div>
                           </div>
                           <div className="gl-list-item">
@@ -1215,7 +1613,9 @@ export const OptionsPage: React.FC = () => {
                                   Changelog
                                 </a>
                               </div>
-                              <div className="gl-list-item-subtitle">View the release history and changelog.</div>
+                              <div className="gl-list-item-subtitle">
+                                View the release history and changelog.
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1254,9 +1654,9 @@ export const OptionsPage: React.FC = () => {
                                   rel="noopener noreferrer"
                                   style={{ color: "var(--gt-primary)", textDecoration: "none" }}
                                 >
-                                Emre Bozkurt
+                                  Emre Bozkurt
                                 </a>
-                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1271,12 +1671,9 @@ export const OptionsPage: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="gl-footer">
-        Graytool Chrome Extension
-      </footer>
+      <footer className="gl-footer">Graytool Chrome Extension</footer>
     </div>
   );
 };
 
 export default OptionsPage;
-

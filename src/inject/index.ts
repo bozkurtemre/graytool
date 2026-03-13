@@ -8,10 +8,7 @@ import { startObserver, stopObserver } from "./observer";
 import { processExistingRows, clearProcessedMarkers } from "./row-processor";
 import { injectStyles, removeStyles } from "./ui/styles";
 import { initJsonViewerListener } from "./ui/json-viewer";
-import {
-  initSearchHistoryListener,
-  destroySearchHistoryListener,
-} from "./ui/search-history";
+import { initSearchHistoryListener, destroySearchHistoryListener } from "./ui/search-history";
 
 let isActive = false;
 let currentConfig: GrayToolConfig | null = null;
@@ -40,10 +37,7 @@ async function activate(matchedPatternId?: string): Promise<void> {
     initJsonViewerListener();
 
     // Initialize Search History listener
-    initSearchHistoryListener(
-      currentMatchedPatternId,
-      currentConfig.settings.searchHistoryEnabled,
-    );
+    initSearchHistoryListener(currentMatchedPatternId, currentConfig.settings.searchHistoryEnabled);
 
     // Process existing rows on page
     processExistingRows(currentConfig, currentMatchedPatternId);
@@ -149,10 +143,7 @@ async function reloadConfig(): Promise<void> {
     startObserver(currentConfig, currentMatchedPatternId);
 
     // Update search history state based on new config
-    initSearchHistoryListener(
-      currentMatchedPatternId,
-      currentConfig.settings.searchHistoryEnabled,
-    );
+    initSearchHistoryListener(currentMatchedPatternId, currentConfig.settings.searchHistoryEnabled);
 
     processExistingRows(currentConfig, currentMatchedPatternId);
   } catch (error) {

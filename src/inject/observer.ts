@@ -12,10 +12,7 @@ let activeMatchedPatternId: string | undefined = undefined;
 
 // ─── Observer Setup ───────────────────────────────────────────
 
-export function startObserver(
-  config: GrayToolConfig,
-  matchedPatternId?: string,
-): void {
+export function startObserver(config: GrayToolConfig, matchedPatternId?: string): void {
   // Clean up if already running
   stopObserver();
 
@@ -99,18 +96,12 @@ function isLogRow(element: Element): boolean {
   const className = element.className || "";
 
   // Modern Graylog message table (tbody wraps a single message)
-  if (
-    tagName === "tbody" &&
-    element.querySelector("[data-testid^='message-summary-field-']")
-  ) {
+  if (tagName === "tbody" && element.querySelector("[data-testid^='message-summary-field-']")) {
     return true;
   }
 
   // Modern Graylog message table row
-  if (
-    tagName === "tr" &&
-    element.querySelector("[data-testid^='message-summary-field-']")
-  ) {
+  if (tagName === "tr" && element.querySelector("[data-testid^='message-summary-field-']")) {
     return true;
   }
 

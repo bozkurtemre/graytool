@@ -48,9 +48,7 @@ async function checkUrlMatch(
   if (!config.settings.enabled) return { isMatch: false };
 
   const enabledPatterns = config.urlPatterns.filter((p) => p.enabled);
-  const matchedPattern = enabledPatterns.find((p) =>
-    matchesPattern(url, p.pattern),
-  );
+  const matchedPattern = enabledPatterns.find((p) => matchesPattern(url, p.pattern));
 
   return {
     isMatch: !!matchedPattern,
@@ -135,9 +133,7 @@ async function requestPermissionForPattern(pattern: string): Promise<boolean> {
  */
 async function getConfiguredOrigins(): Promise<string[]> {
   const config = await getConfig();
-  return config.urlPatterns
-    .filter((p) => p.enabled)
-    .map((p) => p.pattern);
+  return config.urlPatterns.filter((p) => p.enabled).map((p) => p.pattern);
 }
 
 // ─── Tab Listeners ────────────────────────────────────────────
@@ -162,7 +158,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
       // Send activation message
       const message: GrayToolMessage = {
         type: "ACTIVATE",
-        matchedPatternId: result.matchedPatternId
+        matchedPatternId: result.matchedPatternId,
       };
       chrome.tabs.sendMessage(tabId, message).catch(() => {
         // Content script may not be ready yet — this is expected

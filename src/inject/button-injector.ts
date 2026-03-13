@@ -85,10 +85,7 @@ export function injectButtons(
  * - If button has no urlPatternIds defined (empty/undefined), show on all patterns
  * - If button has urlPatternIds, only show if matchedPatternId is in that list
  */
-function isButtonAllowedForPattern(
-  button: ButtonConfig,
-  matchedPatternId?: string,
-): boolean {
+function isButtonAllowedForPattern(button: ButtonConfig, matchedPatternId?: string): boolean {
   const patternIds = button.urlPatternIds;
 
   // No pattern restriction = show on all patterns
@@ -133,9 +130,7 @@ function findBindingValue(
   if (fields[placeholder]) return fields[placeholder];
 
   // 2. FieldBinding specifics (fieldPath + fallbackPaths)
-  const binding = button.fieldBindings.find(
-    (b) => b.placeholder === placeholder,
-  );
+  const binding = button.fieldBindings.find((b) => b.placeholder === placeholder);
   if (binding) {
     // Try primary field path
     if (fields[binding.fieldPath]) return fields[binding.fieldPath];
@@ -163,10 +158,7 @@ export function evaluateConditions(
   return conditions.every((condition) => evaluateCondition(condition, fields));
 }
 
-function evaluateCondition(
-  condition: ButtonCondition,
-  fields: Record<string, string>,
-): boolean {
+function evaluateCondition(condition: ButtonCondition, fields: Record<string, string>): boolean {
   const value = fields[condition.field];
 
   switch (condition.operator) {
@@ -178,15 +170,11 @@ function evaluateCondition(
       return value !== condition.value;
     case "contains":
       return (
-        value !== undefined &&
-        condition.value !== undefined &&
-        value.includes(condition.value)
+        value !== undefined && condition.value !== undefined && value.includes(condition.value)
       );
     case "startsWith":
       return (
-        value !== undefined &&
-        condition.value !== undefined &&
-        value.startsWith(condition.value)
+        value !== undefined && condition.value !== undefined && value.startsWith(condition.value)
       );
     default:
       return false;
@@ -195,11 +183,7 @@ function evaluateCondition(
 
 // ─── DOM Creation ─────────────────────────────────────────────
 
-function createButton(
-  button: ButtonConfig,
-  url: string,
-  btnId: string,
-): HTMLElement {
+function createButton(button: ButtonConfig, url: string, btnId: string): HTMLElement {
   const el = document.createElement("a");
   el.href = url;
   el.setAttribute("data-graytool-btn-id", btnId);
@@ -291,5 +275,3 @@ function findInsertionPoint(row: Element): Element | null {
   // 3. Fallback: the row itself
   return row;
 }
-
-

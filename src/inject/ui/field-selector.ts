@@ -6,10 +6,7 @@ import type { DiscoveredField } from "../../shared/types";
 
 // ─── Public API ───────────────────────────────────────────────
 
-type FieldSelectorCallback = (
-  field: DiscoveredField,
-  saveAsDefault: boolean,
-) => void;
+type FieldSelectorCallback = (field: DiscoveredField, saveAsDefault: boolean) => void;
 
 export function showFieldSelector(
   fields: DiscoveredField[],
@@ -31,10 +28,7 @@ export function showFieldSelector(
 
 // ─── Modal Creation ───────────────────────────────────────────
 
-function createModal(
-  fields: DiscoveredField[],
-  onSelect: FieldSelectorCallback,
-): void {
+function createModal(fields: DiscoveredField[], onSelect: FieldSelectorCallback): void {
   let selectedIndex = 0;
   let saveAsDefault = false;
 
@@ -73,8 +67,7 @@ function createModal(
 
   const desc = document.createElement("p");
   desc.className = "gt-field-modal-desc";
-  desc.textContent =
-    "Graytool bu log row'undan hangi field'ı mesaj içeriği olarak okumalı?";
+  desc.textContent = "Graytool bu log row'undan hangi field'ı mesaj içeriği olarak okumalı?";
   body.appendChild(desc);
 
   // Field options
@@ -133,9 +126,7 @@ function createModal(
     saveAsDefault = saveCheckbox.checked;
   });
   saveLabel.appendChild(saveCheckbox);
-  saveLabel.appendChild(
-    document.createTextNode("Bu seçimi varsayılan olarak kaydet"),
-  );
+  saveLabel.appendChild(document.createTextNode("Bu seçimi varsayılan olarak kaydet"));
 
   const actionBtns = document.createElement("div");
   actionBtns.className = "gt-field-modal-actions";

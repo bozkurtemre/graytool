@@ -22,10 +22,7 @@ export function discoverRowFields(row: Element): DiscoveredField[] {
 
 // ─── Strategy 1: data-field Attributes ────────────────────────
 
-function discoverFromDataAttributes(
-  row: Element,
-  fields: DiscoveredField[],
-): void {
+function discoverFromDataAttributes(row: Element, fields: DiscoveredField[]): void {
   try {
     // Legacy mapping (data-field)
     row.querySelectorAll("[data-field]").forEach((el) => {
@@ -41,20 +38,18 @@ function discoverFromDataAttributes(
     });
 
     // Modern Graylog mapping (data-testid="message-summary-field-X")
-    row
-      .querySelectorAll("[data-testid^='message-summary-field-']")
-      .forEach((el) => {
-        const testId = el.getAttribute("data-testid");
-        if (!testId) return;
-        const name = testId.replace("message-summary-field-", "");
+    row.querySelectorAll("[data-testid^='message-summary-field-']").forEach((el) => {
+      const testId = el.getAttribute("data-testid");
+      if (!testId) return;
+      const name = testId.replace("message-summary-field-", "");
 
-        fields.push({
-          name,
-          value: el.textContent?.trim() || "",
-          source: "data-field",
-          element: el,
-        });
+      fields.push({
+        name,
+        value: el.textContent?.trim() || "",
+        source: "data-field",
+        element: el,
       });
+    });
   } catch (error) {
     // Silent fail
   }
@@ -62,10 +57,7 @@ function discoverFromDataAttributes(
 
 // ─── Strategy 2: JSON Message Parse ───────────────────────────
 
-function discoverFromJsonMessage(
-  row: Element,
-  fields: DiscoveredField[],
-): void {
+function discoverFromJsonMessage(row: Element, fields: DiscoveredField[]): void {
   try {
     // Modern Graylog strategy: Check for "Copy Message" button which has the full JSON
     const clipboardBtn = row.querySelector('[data-clipboard-text^="{"]');
@@ -111,10 +103,7 @@ function tryParseAndFlatten(text: string, fields: DiscoveredField[]): boolean {
 
 // ─── Strategy 3: DOM Patterns ─────────────────────────────────
 
-function discoverFromDomPatterns(
-  row: Element,
-  fields: DiscoveredField[],
-): void {
+function discoverFromDomPatterns(row: Element, fields: DiscoveredField[]): void {
   try {
     // dt/dd pairs (Graylog expanded message view)
     row.querySelectorAll('dt, [class*="field-name"]').forEach((dt) => {
@@ -183,10 +172,7 @@ function deduplicateFields(fields: DiscoveredField[]): DiscoveredField[] {
 
   for (const field of fields) {
     const existing = seen.get(field.name);
-    if (
-      !existing ||
-      priorityOrder[field.source] > priorityOrder[existing.source]
-    ) {
+    if (!existing || priorityOrder[field.source] > priorityOrder[existing.source]) {
       seen.set(field.name, field);
     }
   }

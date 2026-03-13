@@ -29,11 +29,7 @@ export function clearProcessedMarkers(): void {
 
 // ─── Process Single Row ───────────────────────────────────────
 
-export function processRow(
-  row: Element,
-  config: GrayToolConfig,
-  matchedPatternId?: string,
-): void {
+export function processRow(row: Element, config: GrayToolConfig, matchedPatternId?: string): void {
   try {
     // Skip already-processed rows
     if (row.hasAttribute(PROCESSED_ATTR)) {
