@@ -7,6 +7,7 @@ import type {
   GrayToolConfig,
   DiscoveredField,
 } from "../shared/types";
+import { escapeHtml } from "../shared/utils";
 
 // ─── Button Injection ─────────────────────────────────────────
 
@@ -291,8 +292,4 @@ function findInsertionPoint(row: Element): Element | null {
   return row;
 }
 
-function escapeHtml(text: string): string {
-  const el = document.createElement("span");
-  el.textContent = text;
-  return el.innerHTML;
-}
+

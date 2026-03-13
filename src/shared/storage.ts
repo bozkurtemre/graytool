@@ -2,6 +2,7 @@
 // All storage access MUST go through this module (AGENTS.md rule).
 
 import type { GrayToolConfig, AppSettings, GlobalFieldConfig, SearchHistoryEntry } from "./types";
+import { STORAGE_KEY, SEARCH_HISTORY_PREFIX, MAX_HISTORY_ITEMS } from "./constants";
 
 // ─── Defaults ─────────────────────────────────────────────────
 
@@ -28,15 +29,17 @@ export function getDefaultConfig(): GrayToolConfig {
   };
 }
 
-// ─── Storage Keys ─────────────────────────────────────────────
-
-const STORAGE_KEY = "graytool_config";
-
 // ─── Read ─────────────────────────────────────────────────────
 
 export async function getConfig(): Promise<GrayToolConfig> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.storage.sync.get([STORAGE_KEY], (result) => {
+      if (chrome.runtime.lastError) {
+        console.log("Graytool: Error reading config:", chrome.runtime.lastError.message);
+        resolve(getDefaultConfig());
+        return;
+      }
+
       const raw = result[STORAGE_KEY];
 
       // No config stored yet → return defaults
@@ -211,9 +214,6 @@ export function normalizeButtons(
 }
 
 // ─── Search History (Local Storage) ───────────────────────────
-
-const SEARCH_HISTORY_PREFIX = "graytool_search_history_";
-const MAX_HISTORY_ITEMS = 50;
 
 /**
  * Get search history for a specific URL pattern ID

@@ -2,14 +2,13 @@
 // Watches for new log rows added to the DOM.
 
 import type { GrayToolConfig } from "../shared/types";
+import { OBSERVER_DEBOUNCE_MS } from "../shared/constants";
 import { processRow } from "./row-processor";
 
 let observer: MutationObserver | null = null;
 let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 let activeConfig: GrayToolConfig | null = null;
 let activeMatchedPatternId: string | undefined = undefined;
-
-const DEBOUNCE_MS = 50;
 
 // ─── Observer Setup ───────────────────────────────────────────
 
@@ -31,7 +30,7 @@ export function startObserver(
 
     debounceTimer = setTimeout(() => {
       handleMutations(mutations);
-    }, DEBOUNCE_MS);
+    }, OBSERVER_DEBOUNCE_MS);
   });
 
   observer.observe(document.body, {

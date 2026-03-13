@@ -2,6 +2,7 @@
 // Activates only when background.ts sends ACTIVATE message.
 
 import { getConfig } from "../shared/storage";
+import { PROCESS_INTERVAL_MS } from "../shared/constants";
 import type { GrayToolConfig, GrayToolMessage } from "../shared/types";
 import { startObserver, stopObserver } from "./observer";
 import { processExistingRows, clearProcessedMarkers } from "./row-processor";
@@ -83,12 +84,12 @@ function startPeriodicProcessing(): void {
   // Listen for clicks on Graylog pagination
   document.addEventListener("click", handleGraylogPaginationClick, true);
 
-  // Then check every 2 seconds for new/changed rows
+  // Then check periodically for new/changed rows
   processInterval = setInterval(() => {
     if (!isActive || !currentConfig) return;
     // processExistingRows already skips already-processed rows
     processExistingRows(currentConfig, currentMatchedPatternId);
-  }, 2000);
+  }, PROCESS_INTERVAL_MS);
 }
 
 /**
@@ -146,13 +147,13 @@ async function reloadConfig(): Promise<void> {
     // Restart observer and features with new config (preserve matchedPatternId)
     stopObserver();
     startObserver(currentConfig, currentMatchedPatternId);
-    
+
     // Update search history state based on new config
     initSearchHistoryListener(
       currentMatchedPatternId,
       currentConfig.settings.searchHistoryEnabled,
     );
-    
+
     processExistingRows(currentConfig, currentMatchedPatternId);
   } catch (error) {
     // Silent fail

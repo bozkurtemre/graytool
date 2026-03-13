@@ -2,6 +2,8 @@
 // All content script styles are injected as a single <style> tag.
 // Automatically detects Graylog's theme (light/dark) from localStorage.
 
+import { THEME_CHECK_INTERVAL_MS } from "../../shared/constants";
+
 let styleElement: HTMLStyleElement | null = null;
 let currentTheme: "light" | "dark" = "dark";
 
@@ -59,14 +61,13 @@ export function removeStyles(): void {
 let themeCheckInterval: ReturnType<typeof setInterval> | null = null;
 
 function startThemeWatcher(): void {
-  // Check every 500ms for theme changes
   themeCheckInterval = setInterval(() => {
     const newTheme = detectGraylogTheme();
     if (newTheme !== currentTheme) {
       currentTheme = newTheme;
       updateTheme();
     }
-  }, 500);
+  }, THEME_CHECK_INTERVAL_MS);
 }
 
 function stopThemeWatcher(): void {

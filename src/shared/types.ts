@@ -115,6 +115,19 @@ export interface ConfigUpdatedMessage {
   type: "CONFIG_UPDATED";
 }
 
+// Internal messages (Content Script → Background)
+export interface CheckUrlMessage {
+  type: "CHECK_URL";
+}
+
+export interface GetConfigMessage {
+  type: "GET_CONFIG";
+}
+
+export interface PingMessage {
+  type: "PING";
+}
+
 export interface CheckUrlResponse {
   isMatch: boolean;
   matchedPatternId?: string; // ID of the URL pattern that matched
@@ -139,6 +152,9 @@ export type GrayToolMessage =
   | ActivateMessage
   | DeactivateMessage
   | ConfigUpdatedMessage
+  | CheckUrlMessage
+  | GetConfigMessage
+  | PingMessage
   | RequestPermissionMessage
   | HasPermissionMessage
   | GetConfiguredOriginsMessage;

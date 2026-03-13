@@ -2,10 +2,9 @@
 // Coordinates field discovery and button injection (P1).
 
 import type { GrayToolConfig, DiscoveredField } from "../shared/types";
+import { PROCESSED_ATTR } from "../shared/constants";
 import { discoverRowFields } from "./field-detector";
 import { injectButtons } from "./button-injector";
-
-const PROCESSED_ATTR = "data-graytool-processed";
 
 // ─── Clear Processed Markers ────────────────────────────────────
 

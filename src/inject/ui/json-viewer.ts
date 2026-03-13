@@ -2,48 +2,11 @@
 // Vanilla TS. Draggable, collapsible, searchable JSON tree viewer.
 
 import type { DiscoveredField, GrayToolConfig } from "../../shared/types";
+import { TAB_COLLAPSED_KEY } from "../../shared/constants";
+import { escapeHtml, escapeAttr, copyToClipboard } from "../../shared/utils";
 import { showFieldSelector } from "./field-selector";
 
 // ─── Helpers ──────────────────────────────────────────────────
-
-function escapeHtml(text: string): string {
-  const el = document.createElement("span");
-  el.textContent = text;
-  return el.innerHTML;
-}
-
-async function copyToClipboard(text: string): Promise<void> {
-  // Modern clipboard API - always try this first
-  if (navigator.clipboard?.writeText) {
-    return navigator.clipboard.writeText(text);
-  }
-
-  // Fallback for contexts where clipboard API is not available
-  // This is needed for older browsers and certain contexts
-  return new Promise((resolve, reject) => {
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.cssText = "position:fixed;left:-9999px;top:-9999px;opacity:0";
-      ta.setAttribute("readonly", "");
-      document.body.appendChild(ta);
-      ta.select();
-      ta.setSelectionRange(0, text.length);
-
-      // execCommand is deprecated but still needed as fallback for older browsers
-      const success = document.execCommand("copy");
-      document.body.removeChild(ta);
-
-      if (success) {
-        resolve();
-      } else {
-        reject(new Error("Copy command failed"));
-      }
-    } catch (e) {
-      reject(e);
-    }
-  });
-}
 
 export function showNotification(
   message: string,
@@ -87,13 +50,15 @@ let currentSearchTerm = "";
 let currentFocusIndex = -1;
 let matchedRows: HTMLElement[] = [];
 const collapseState = new Map<string, boolean>();
-
-// Tab collapse state key for localStorage
-const TAB_COLLAPSED_KEY = "graytool_tabs_collapsed";
+let activeKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
+let jsonViewerListenerRegistered = false;
 
 // ─── Public API ───────────────────────────────────────────────
 
 export function initJsonViewerListener(): void {
+  if (jsonViewerListenerRegistered) return;
+  jsonViewerListenerRegistered = true;
+
   document.addEventListener("graytool:open-detail", ((e: CustomEvent) => {
     const { fields, config } = e.detail as {
       fields: DiscoveredField[];
@@ -242,10 +207,15 @@ function createViewerPanel(
       return;
     }
   };
+  activeKeydownHandler = handleKey;
   document.addEventListener("keydown", handleKey);
 }
 
 function closeJsonViewer(): void {
+  if (activeKeydownHandler) {
+    document.removeEventListener("keydown", activeKeydownHandler);
+    activeKeydownHandler = null;
+  }
   if (currentOverlay?.parentNode) {
     currentOverlay.parentNode.removeChild(currentOverlay);
     currentOverlay = null;
@@ -487,7 +457,7 @@ function appendPrimitive(
 
   const content = document.createElement("span");
   content.className = "gt-json-row-content";
-  content.innerHTML = `<span class="${className} gt-json-value-clickable" data-field-path="${escapeHtml(path)}">${displayValue}</span>`;
+  content.innerHTML = `<span class="${className} gt-json-value-clickable" data-field-path="${escapeAttr(path)}">${displayValue}</span>`;
   row.appendChild(content);
 
   // Action buttons
@@ -564,7 +534,7 @@ function renderObject(
     const keyContent = document.createElement("span");
     keyContent.className = "gt-json-row-content";
 
-    const keySpan = `<span class="gt-json-key gt-json-key-clickable" data-field-name="${escapeHtml(key)}" data-field-path="${escapeHtml(childPath)}">"${escapeHtml(key)}"</span>`;
+    const keySpan = `<span class="gt-json-key gt-json-key-clickable" data-field-name="${escapeAttr(key)}" data-field-path="${escapeAttr(childPath)}">"${escapeHtml(key)}"</span>`;
     keyContent.innerHTML = `${keySpan}<span class="gt-json-punctuation">: </span>`;
 
     keyRow.appendChild(keyContent);
