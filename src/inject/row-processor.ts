@@ -37,7 +37,7 @@ export function processRow(row: Element, config: GrayToolConfig, matchedPatternI
     }
 
     // Discover fields from this row
-    const fields = discoverRowFields(row);
+    const fields = discoverRowFields(row, config.globalFieldConfig);
     if (fields.length === 0) {
       return;
     }

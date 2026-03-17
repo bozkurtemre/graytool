@@ -1,18 +1,21 @@
 // inject/field-detector.ts — Graylog field auto-detection
 // Discovers fields from log rows using multiple strategies.
 
-import type { DiscoveredField } from "../shared/types";
+import type { DiscoveredField, GlobalFieldConfig } from "../shared/types";
 
 // ─── Main Discovery Function ──────────────────────────────────
 
-export function discoverRowFields(row: Element): DiscoveredField[] {
+export function discoverRowFields(
+  row: Element,
+  fieldConfig?: GlobalFieldConfig,
+): DiscoveredField[] {
   const fields: DiscoveredField[] = [];
 
   // Strategy 1: data-field attributes (most reliable)
   discoverFromDataAttributes(row, fields);
 
   // Strategy 2: JSON message parse
-  discoverFromJsonMessage(row, fields);
+  discoverFromJsonMessage(row, fields, fieldConfig);
 
   // Strategy 3: Graylog-specific DOM patterns (dt/dd, field-name classes)
   discoverFromDomPatterns(row, fields);
@@ -57,13 +60,17 @@ function discoverFromDataAttributes(row: Element, fields: DiscoveredField[]): vo
 
 // ─── Strategy 2: JSON Message Parse ───────────────────────────
 
-function discoverFromJsonMessage(row: Element, fields: DiscoveredField[]): void {
+function discoverFromJsonMessage(
+  row: Element,
+  fields: DiscoveredField[],
+  fieldConfig?: GlobalFieldConfig,
+): void {
   try {
     // Modern Graylog strategy: Check for "Copy Message" button which has the full JSON
     const clipboardBtn = row.querySelector('[data-clipboard-text^="{"]');
     if (clipboardBtn) {
       const text = clipboardBtn.getAttribute("data-clipboard-text") || "";
-      if (tryParseAndFlatten(text, fields)) return;
+      if (tryParseAndFlatten(text, fields, fieldConfig)) return;
     }
 
     // Fallback: Look for elements that might contain JSON
@@ -74,7 +81,7 @@ function discoverFromJsonMessage(row: Element, fields: DiscoveredField[]): void 
     for (const messageEl of Array.from(messageEls)) {
       const text = messageEl.textContent?.trim() || "";
       if (text.startsWith("{") && text.endsWith("}")) {
-        if (tryParseAndFlatten(text, fields)) return;
+        if (tryParseAndFlatten(text, fields, fieldConfig)) return;
       }
     }
   } catch (error) {
@@ -82,12 +89,18 @@ function discoverFromJsonMessage(row: Element, fields: DiscoveredField[]): void 
   }
 }
 
-function tryParseAndFlatten(text: string, fields: DiscoveredField[]): boolean {
+function tryParseAndFlatten(
+  text: string,
+  fields: DiscoveredField[],
+  fieldConfig?: GlobalFieldConfig,
+): boolean {
   try {
     const parsed = JSON.parse(text);
     if (typeof parsed !== "object" || parsed === null) return false;
 
-    const flattened = flattenObject(parsed);
+    const parseJsonStrings = fieldConfig?.parseJsonStrings !== false;
+    const maxDepth = fieldConfig?.jsonParseMaxDepth ?? 5;
+    const flattened = flattenObject(parsed, "", [], 0, maxDepth, parseJsonStrings);
     for (const [path, value] of flattened) {
       fields.push({
         name: path,
@@ -132,6 +145,9 @@ export function flattenObject(
   obj: Record<string, unknown>,
   prefix = "",
   result: Array<[string, unknown]> = [],
+  depth = 0,
+  maxDepth = 5,
+  parseJsonStrings = true,
 ): Array<[string, unknown]> {
   for (const [key, value] of Object.entries(obj)) {
     const path = prefix ? `${prefix}.${key}` : key;
@@ -145,11 +161,40 @@ export function flattenObject(
       }
 
       // Continue flattening if it's a plain object
-      if (!Array.isArray(value)) {
-        flattenObject(value as Record<string, unknown>, path, result);
+      if (!Array.isArray(value) && depth < maxDepth) {
+        flattenObject(
+          value as Record<string, unknown>,
+          path,
+          result,
+          depth + 1,
+          maxDepth,
+          parseJsonStrings,
+        );
       }
+    } else if (typeof value === "string" && parseJsonStrings && depth < maxDepth) {
+      // Check if string looks like JSON
+      const trimmed = value.trim();
+      if (
+        (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+        (trimmed.startsWith("[") && trimmed.endsWith("]"))
+      ) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (typeof parsed === "object" && parsed !== null) {
+            // Add the raw string value too
+            result.push([path, value]);
+            // Recursively flatten the parsed JSON
+            flattenObject(parsed, path, result, depth + 1, maxDepth, parseJsonStrings);
+            continue;
+          }
+        } catch {
+          // Not valid JSON, fall through
+        }
+      }
+      // Regular string
+      result.push([path, value]);
     } else {
-      // Primitive value
+      // Other primitives
       result.push([path, value]);
     }
   }

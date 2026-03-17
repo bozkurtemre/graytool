@@ -6,6 +6,7 @@ import type {
   GrayToolConfig,
   UrlPattern,
   ButtonConfig,
+  FieldBinding,
   AppSettings,
   GlobalFieldConfig,
   ButtonColor,
@@ -282,6 +283,35 @@ export const OptionsPage: React.FC = () => {
     setEditingButton({ ...editingButton, urlPatternIds: newIds });
   };
 
+  // ─── Field Mappings ─────────────────────────────────────────────────────
+
+  const extractPlaceholders = (url: string): string[] => {
+    const matches = [...url.matchAll(/\{(\w+(?:\.\w+)*)\}/g)];
+    return [...new Set(matches.map(([, name]) => name))];
+  };
+
+  const handleUrlChangeWithBindings = (url: string) => {
+    if (!editingButton) return;
+    const placeholders = extractPlaceholders(url);
+    const existingBindings = editingButton.fieldBindings;
+
+    // Keep existing bindings for still-present placeholders, add new ones, remove stale ones
+    const newBindings: FieldBinding[] = placeholders.map((placeholder) => {
+      const existing = existingBindings.find((b) => b.placeholder === placeholder);
+      return existing || { placeholder, fieldPath: "" };
+    });
+
+    setEditingButton({ ...editingButton, url, fieldBindings: newBindings });
+  };
+
+  const handleUpdateBinding = (placeholder: string, fieldPath: string) => {
+    if (!editingButton) return;
+    const newBindings = editingButton.fieldBindings.map((b) =>
+      b.placeholder === placeholder ? { ...b, fieldPath } : b,
+    );
+    setEditingButton({ ...editingButton, fieldBindings: newBindings });
+  };
+
   // ─── Settings ────────────────────────────────────────────────────────
 
   const handleSettingChange = (key: keyof AppSettings, value: boolean) => {
@@ -293,7 +323,7 @@ export const OptionsPage: React.FC = () => {
 
   const handleFieldConfigChange = (
     key: keyof GlobalFieldConfig,
-    value: string | string[] | null,
+    value: string | string[] | boolean | number | null,
   ) => {
     if (!config) return;
     handleSave({ globalFieldConfig: { ...config.globalFieldConfig, [key]: value } });
@@ -966,18 +996,81 @@ export const OptionsPage: React.FC = () => {
                                   type="text"
                                   className="gl-form-control form-control"
                                   value={editingButton.url}
-                                  onChange={(e) =>
-                                    setEditingButton({ ...editingButton, url: e.target.value })
-                                  }
+                                  onChange={(e) => handleUrlChangeWithBindings(e.target.value)}
                                   placeholder="https://admin.company.com/users/{userId}"
                                 />
                                 <span className="gl-help-block help-block">
                                   <span className="gl-help-text">
-                                    Use {`{fieldName}`} placeholders for dynamic values.
+                                    Use {`{fieldName}`} placeholders for dynamic values. Map them to
+                                    actual log field paths below.
                                   </span>
                                 </span>
                               </div>
                             </div>
+
+                            {/* Field Mappings — auto-detected from URL placeholders */}
+                            {editingButton.fieldBindings.length > 0 && (
+                              <div className="gl-form-group form-group">
+                                <label className="gl-control-label col-sm-3 control-label">
+                                  Field Mappings
+                                </label>
+                                <div className="col-sm-9">
+                                  <div style={{ marginBottom: "8px" }}>
+                                    <span
+                                      className="gl-help-text"
+                                      style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}
+                                    >
+                                      Map URL placeholders to actual log field paths. Leave empty to
+                                      use the placeholder name as the field path directly.
+                                    </span>
+                                  </div>
+                                  {editingButton.fieldBindings.map((binding) => (
+                                    <div
+                                      key={binding.placeholder}
+                                      style={{
+                                        display: "flex",
+                                        gap: "8px",
+                                        marginBottom: "8px",
+                                        alignItems: "center",
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          minWidth: "fit-content",
+                                          padding: "6px 10px",
+                                          backgroundColor: "var(--gl-bg-tertiary)",
+                                          border: "1px solid var(--gl-border-color)",
+                                          borderRadius: "4px",
+                                          fontSize: "13px",
+                                          fontFamily: "monospace",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                      >
+                                        {`{${binding.placeholder}}`}
+                                      </span>
+                                      <span
+                                        style={{
+                                          color: "var(--gl-text-muted)",
+                                          fontSize: "13px",
+                                        }}
+                                      >
+                                        &rarr;
+                                      </span>
+                                      <input
+                                        type="text"
+                                        className="gl-form-control form-control"
+                                        style={{ flex: "1" }}
+                                        value={binding.fieldPath}
+                                        onChange={(e) =>
+                                          handleUpdateBinding(binding.placeholder, e.target.value)
+                                        }
+                                        placeholder={binding.placeholder}
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
                                 Color
@@ -1260,6 +1353,57 @@ export const OptionsPage: React.FC = () => {
                             <span className="gl-help-block help-block">
                               <span className="gl-help-text">
                                 Comma-separated list of field prefixes to search.
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="gl-form-group form-group">
+                          <label className="gl-control-label col-sm-3 control-label">
+                            JSON String Parsing
+                          </label>
+                          <div className="col-sm-9">
+                            <div className="checkbox">
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  checked={config.globalFieldConfig.parseJsonStrings !== false}
+                                  onChange={(e) =>
+                                    handleFieldConfigChange("parseJsonStrings", e.target.checked)
+                                  }
+                                />
+                                Parse JSON strings in field values
+                              </label>
+                            </div>
+                            <span className="gl-help-block help-block">
+                              <span className="gl-help-text">
+                                When enabled, string values that contain JSON will be parsed and
+                                their nested fields will be available for button bindings.
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="gl-form-group form-group">
+                          <label className="gl-control-label col-sm-3 control-label">
+                            Max Parse Depth
+                          </label>
+                          <div className="col-sm-9">
+                            <input
+                              type="number"
+                              className="gl-form-control form-control"
+                              value={config.globalFieldConfig.jsonParseMaxDepth ?? 5}
+                              onChange={(e) =>
+                                handleFieldConfigChange(
+                                  "jsonParseMaxDepth",
+                                  Math.min(10, Math.max(1, parseInt(e.target.value) || 5)),
+                                )
+                              }
+                              min={1}
+                              max={10}
+                              placeholder="5"
+                            />
+                            <span className="gl-help-block help-block">
+                              <span className="gl-help-text">
+                                Maximum recursion depth for parsing nested JSON strings (1-10).
                               </span>
                             </span>
                           </div>

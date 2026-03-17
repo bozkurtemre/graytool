@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS: AppSettings = {
 const DEFAULT_FIELD_CONFIG: GlobalFieldConfig = {
   defaultMessageField: null,
   rowFieldPrefixes: ["msg.", "context.", ""],
+  parseJsonStrings: true,
+  jsonParseMaxDepth: 5,
 };
 
 export function getDefaultConfig(): GrayToolConfig {
