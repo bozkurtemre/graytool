@@ -127,6 +127,18 @@ export const OptionsPage: React.FC = () => {
     });
   }, []);
 
+  // Close modals on ESC key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (editingButton) setEditingButton(null);
+        else if (editingPattern) setEditingPattern(null);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [editingButton, editingPattern]);
+
   // Save config
   const handleSave = async (partial?: Partial<GrayToolConfig>) => {
     if (!config) return;
@@ -724,8 +736,8 @@ export const OptionsPage: React.FC = () => {
 
                     {/* Pattern Edit Modal */}
                     {editingPattern && (
-                      <div className="gl-modal-overlay" onClick={() => setEditingPattern(null)}>
-                        <div className="gl-modal" onClick={(e) => e.stopPropagation()}>
+                      <div className="gl-modal-overlay">
+                        <div className="gl-modal">
                           <div className="gl-modal-header">
                             <h2>
                               {editingPattern.id.startsWith("id-") ? "Edit Pattern" : "Add Pattern"}
@@ -958,11 +970,8 @@ export const OptionsPage: React.FC = () => {
 
                     {/* Button Edit Modal */}
                     {editingButton && (
-                      <div className="gl-modal-overlay" onClick={() => setEditingButton(null)}>
-                        <div
-                          className="gl-modal gl-modal-large"
-                          onClick={(e) => e.stopPropagation()}
-                        >
+                      <div className="gl-modal-overlay">
+                        <div className="gl-modal gl-modal-large">
                           <div className="gl-modal-header">
                             <h2>
                               {config.buttons.find((b) => b.id === editingButton.id)
