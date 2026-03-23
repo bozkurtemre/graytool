@@ -4,7 +4,9 @@
 
 <br/>
 <div align="center">
-<a rel="noreferrer noopener" href="https://chromewebstore.google.com/detail/graytool"><img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome-141e24.svg?&style=for-the-badge&logo=google-chrome&logoColor=white"></a>
+<a rel="noreferrer noopener" href="https://chromewebstore.google.com/detail/graytool-graylog-develope/eoaanfopkgbpcnhialjoaciogdmojpkc">
+<img alt="Chrome Web Store" src="https://img.shields.io/badge/Chrome-141e24.svg?&style=for-the-badge&logo=google-chrome&logoColor=white">
+</a>
 </div>
 
 ##
