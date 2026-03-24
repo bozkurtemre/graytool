@@ -3,6 +3,7 @@
 
 import { getConfig } from "../shared/storage";
 import { PROCESS_INTERVAL_MS } from "../shared/constants";
+import { initLocaleFromConfig } from "../shared/i18n";
 import type { GrayToolConfig, GrayToolMessage } from "../shared/types";
 import { startObserver, stopObserver } from "./observer";
 import { processExistingRows, clearProcessedMarkers } from "./row-processor";
@@ -27,6 +28,9 @@ async function activate(matchedPatternId?: string): Promise<void> {
     if (!currentConfig.settings.enabled) {
       return;
     }
+
+    // Initialize locale from config
+    initLocaleFromConfig(currentConfig.settings.language);
 
     isActive = true;
 
@@ -137,6 +141,9 @@ async function reloadConfig(): Promise<void> {
       deactivate();
       return;
     }
+
+    // Update locale from config
+    initLocaleFromConfig(currentConfig.settings.language);
 
     // Restart observer and features with new config (preserve matchedPatternId)
     stopObserver();

@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Graytool: graylog geliştirici araç seti",
+    "description": "Uzantının görünen adı."
+  },
+  "extensionDescription": {
+    "message": "Graylog'u özelleştirilebilir aksiyon butonları, otomatik alan keşfi, JSON görüntüleyici, arama geçmişi ve daha fazlasıyla güçlendirin.",
+    "description": "Uzantının açıklaması."
+  }
+}

@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   jsonViewerEnabled: true,
   keyboardShortcutsEnabled: true,
   searchHistoryEnabled: true,
+  language: undefined,
 };
 
 const DEFAULT_FIELD_CONFIG: GlobalFieldConfig = {

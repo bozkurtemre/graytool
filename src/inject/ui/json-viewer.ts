@@ -4,6 +4,7 @@
 import type { DiscoveredField, GrayToolConfig } from "../../shared/types";
 import { TAB_COLLAPSED_KEY } from "../../shared/constants";
 import { escapeHtml, escapeAttr, copyToClipboard } from "../../shared/utils";
+import { t } from "../../shared/i18n";
 import { showFieldSelector } from "./field-selector";
 
 // ─── Helpers ──────────────────────────────────────────────────
@@ -35,10 +36,10 @@ function applyGraylogFilter(fieldName: string, fieldValue: string): void {
     searchInput.value = existing ? `${existing} AND ${query}` : query;
     searchInput.dispatchEvent(new Event("input", { bubbles: true }));
     searchInput.dispatchEvent(new Event("change", { bubbles: true }));
-    showNotification(`Filter: ${query}`, "success");
+    showNotification(t("jsonViewer_filterPrefix", { query }), "success");
   } else {
     copyToClipboard(query).then(() => {
-      showNotification("Query copied — paste in Graylog search", "info");
+      showNotification(t("jsonViewer_queryCopied"), "info");
     });
   }
 }
@@ -225,13 +226,13 @@ function createHeader(panel: HTMLElement): HTMLElement {
 
   const title = document.createElement("div");
   title.className = "gt-json-header-title";
-  title.innerHTML = "Detail View";
+  title.innerHTML = t("jsonViewer_detailView");
 
   const actions = document.createElement("div");
   actions.className = "gt-json-header-actions";
 
   // Close
-  const closeBtn = createHeaderBtn('<i class="fas fa-times fa-fw"></i>', "Close", closeJsonViewer);
+  const closeBtn = createHeaderBtn('<i class="fas fa-times fa-fw"></i>', t("jsonViewer_close"), closeJsonViewer);
   actions.appendChild(closeBtn);
 
   header.appendChild(title);
@@ -263,7 +264,7 @@ function createToolbar(
 
   // Field dropdown
   const fieldLabel = document.createElement("span");
-  fieldLabel.textContent = "Field:";
+  fieldLabel.textContent = t("jsonViewer_field");
   fieldLabel.style.fontSize = "12px";
   fieldLabel.style.color = "var(--gt-text-secondary)";
   toolbar.appendChild(fieldLabel);
@@ -324,7 +325,7 @@ function createToolbar(
   const searchInput = document.createElement("input");
   searchInput.className = "gt-json-search";
   searchInput.type = "text";
-  searchInput.placeholder = "Search fields... (/)";
+  searchInput.placeholder = t("jsonViewer_searchPlaceholder");
   searchInput.addEventListener("input", () => {
     currentSearchTerm = searchInput.value.toLowerCase();
     const body = currentOverlay?.querySelector(".gt-json-body");
@@ -338,11 +339,11 @@ function createToolbar(
   // Copy All
   const copyAllBtn = document.createElement("button");
   copyAllBtn.className = "gt-json-copy-all-btn";
-  copyAllBtn.textContent = "Copy All";
+  copyAllBtn.textContent = t("jsonViewer_copyAll");
   copyAllBtn.addEventListener("click", () => {
     const content = typeof data === "object" ? JSON.stringify(data, null, 2) : rawContent;
     copyToClipboard(content).then(() => {
-      showNotification("Copied to clipboard", "success");
+      showNotification(t("jsonViewer_copiedToClipboard"), "success");
     });
   });
   toolbar.appendChild(copyAllBtn);
@@ -461,7 +462,7 @@ function renderObject(
   headerContent.appendChild(toggle);
   headerContent.insertAdjacentHTML(
     "beforeend",
-    `<span class="gt-json-punctuation">{</span><span class="gt-json-length">${keys.length} keys</span>`,
+    `<span class="gt-json-punctuation">{</span><span class="gt-json-length">${t("jsonViewer_nKeys", { n: String(keys.length) })}</span>`,
   );
   headerRow.appendChild(headerContent);
   parent.appendChild(headerRow);
@@ -562,7 +563,7 @@ function renderArray(parent: Node, arr: unknown[], path: string, indent: number)
   headerContent.appendChild(toggle);
   headerContent.insertAdjacentHTML(
     "beforeend",
-    `<span class="gt-json-punctuation">[</span><span class="gt-json-length">${arr.length} items</span>`,
+    `<span class="gt-json-punctuation">[</span><span class="gt-json-length">${t("jsonViewer_nItems", { n: String(arr.length) })}</span>`,
   );
   headerRow.appendChild(headerContent);
   parent.appendChild(headerRow);
@@ -618,7 +619,7 @@ function createRowActions(path: string, value: string, fieldName?: string): HTML
   // Filter button
   const filterBtn = document.createElement("button");
   filterBtn.className = "gt-json-row-action";
-  filterBtn.title = "Add as Graylog filter";
+  filterBtn.title = t("jsonViewer_addFilter");
   filterBtn.innerHTML = '<i class="fas fa-search-plus fa-fw"></i>';
   filterBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -630,12 +631,12 @@ function createRowActions(path: string, value: string, fieldName?: string): HTML
   // Copy button
   const copyBtn = document.createElement("button");
   copyBtn.className = "gt-json-row-action";
-  copyBtn.title = "Copy value";
+  copyBtn.title = t("jsonViewer_copyValue");
   copyBtn.innerHTML = '<i class="fas fa-copy fa-fw"></i>';
   copyBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     copyToClipboard(value).then(() => {
-      showNotification("Copied!", "success");
+      showNotification(t("jsonViewer_copied"), "success");
     });
   });
   actions.appendChild(copyBtn);
@@ -800,7 +801,7 @@ function createTabs(
   const tabBar = document.createElement("div");
   tabBar.className = "gt-tabs gt-tabs-draggable";
 
-  const tabs = ["Raw", "DevTools", "Code"];
+  const tabs = [t("jsonViewer_tabRaw"), t("jsonViewer_tabDevTools"), t("jsonViewer_tabCode")];
   const tabPanels: HTMLElement[] = [];
 
   tabs.forEach((label, index) => {
@@ -931,13 +932,13 @@ function createDevToolsTab(rawContent: string): HTMLElement {
 
   const title = document.createElement("div");
   title.className = "gt-devtools-section-title";
-  title.textContent = "JSON Escape / Unescape";
+  title.textContent = t("jsonViewer_jsonEscape");
   escapeSection.appendChild(title);
 
   const textarea = document.createElement("textarea");
   textarea.className = "gt-devtools-textarea";
   textarea.value = rawContent;
-  textarea.placeholder = "Paste JSON here...";
+  textarea.placeholder = t("jsonViewer_pasteJsonHere");
   escapeSection.appendChild(textarea);
 
   const btnRow = document.createElement("div");
@@ -945,7 +946,7 @@ function createDevToolsTab(rawContent: string): HTMLElement {
 
   const escapeBtn = document.createElement("button");
   escapeBtn.className = "gt-btn gt-btn-primary";
-  escapeBtn.textContent = "Escape";
+  escapeBtn.textContent = t("jsonViewer_escape");
   escapeBtn.addEventListener("click", () => {
     textarea.value = JSON.stringify(textarea.value);
   });
@@ -953,35 +954,35 @@ function createDevToolsTab(rawContent: string): HTMLElement {
 
   const unescapeBtn = document.createElement("button");
   unescapeBtn.className = "gt-btn gt-btn-default";
-  unescapeBtn.textContent = "Unescape";
+  unescapeBtn.textContent = t("jsonViewer_unescape");
   unescapeBtn.addEventListener("click", () => {
     try {
       textarea.value = JSON.parse(textarea.value);
     } catch {
-      showNotification("Invalid escaped JSON", "error");
+      showNotification(t("jsonViewer_invalidEscapedJson"), "error");
     }
   });
   btnRow.appendChild(unescapeBtn);
 
   const prettifyBtn = document.createElement("button");
   prettifyBtn.className = "gt-btn gt-btn-default";
-  prettifyBtn.textContent = "Prettify";
+  prettifyBtn.textContent = t("jsonViewer_prettify");
   prettifyBtn.addEventListener("click", () => {
     try {
       const obj = JSON.parse(textarea.value);
       textarea.value = JSON.stringify(obj, null, 2);
     } catch {
-      showNotification("Invalid JSON", "error");
+      showNotification(t("jsonViewer_invalidJson"), "error");
     }
   });
   btnRow.appendChild(prettifyBtn);
 
   const copyDevBtn = document.createElement("button");
   copyDevBtn.className = "gt-btn gt-btn-default";
-  copyDevBtn.textContent = "Copy";
+  copyDevBtn.textContent = t("jsonViewer_copy");
   copyDevBtn.addEventListener("click", () => {
     copyToClipboard(textarea.value).then(() => {
-      showNotification("Copied!", "success");
+      showNotification(t("jsonViewer_copied"), "success");
     });
   });
   btnRow.appendChild(copyDevBtn);
@@ -1307,7 +1308,7 @@ function createCodeTab(data: Record<string, unknown>): HTMLElement {
   selectorRow.style.alignItems = "center";
 
   const label = document.createElement("span");
-  label.textContent = "Language:";
+  label.textContent = t("jsonViewer_language");
   label.style.fontSize = "12px";
   label.style.color = "var(--gt-text-secondary)";
   selectorRow.appendChild(label);
@@ -1329,7 +1330,7 @@ function createCodeTab(data: Record<string, unknown>): HTMLElement {
   const copyBtn = document.createElement("button");
   copyBtn.className = "gt-btn gt-btn-primary";
   copyBtn.style.marginLeft = "auto";
-  copyBtn.innerHTML = '<i class="fas fa-copy fa-fw"></i> Copy';
+  copyBtn.innerHTML = '<i class="fas fa-copy fa-fw"></i> ' + t("jsonViewer_copy");
   selectorRow.appendChild(copyBtn);
 
   container.appendChild(selectorRow);
@@ -1351,7 +1352,7 @@ function createCodeTab(data: Record<string, unknown>): HTMLElement {
 
   copyBtn.addEventListener("click", () => {
     copyToClipboard(codePre.textContent || "").then(() => {
-      showNotification("Code copied!", "success");
+      showNotification(t("jsonViewer_codeCopied"), "success");
     });
   });
 

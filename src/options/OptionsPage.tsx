@@ -14,6 +14,8 @@ import type {
   ButtonConditionOperator,
 } from "../shared/types";
 import { getConfig, getDefaultConfig, saveConfig } from "../shared/storage";
+import { t, setLocale, initLocaleFromConfig, getLocale, SUPPORTED_LOCALES } from "../shared/i18n";
+import type { Locale } from "../shared/i18n";
 
 // ─── SVG Icons ────────────────────────────────────────────────────────
 
@@ -118,10 +120,13 @@ export const OptionsPage: React.FC = () => {
     type: "success" | "error";
     message: string;
   } | null>(null);
+  const [locale, setLocaleState] = useState<Locale>("en");
 
   // Load config on mount
   useEffect(() => {
     getConfig().then((cfg) => {
+      initLocaleFromConfig(cfg.settings.language);
+      setLocaleState(getLocale());
       setConfig(cfg);
       setLoading(false);
     });
@@ -178,7 +183,7 @@ export const OptionsPage: React.FC = () => {
         if (!granted) {
           setImportStatus({
             type: "error",
-            message: "Permission denied. The extension will not work on this URL pattern.",
+            message: t("options_permissionDenied"),
           });
           return;
         }
@@ -331,6 +336,15 @@ export const OptionsPage: React.FC = () => {
     handleSave({ settings: { ...config.settings, [key]: value } });
   };
 
+  // ─── Language ────────────────────────────────────────────────────────
+
+  const handleLanguageChange = (newLocale: Locale) => {
+    setLocale(newLocale);
+    setLocaleState(newLocale);
+    if (!config) return;
+    handleSave({ settings: { ...config.settings, language: newLocale } });
+  };
+
   // ─── Field Config ────────────────────────────────────────────────────
 
   const handleFieldConfigChange = (
@@ -382,7 +396,7 @@ export const OptionsPage: React.FC = () => {
 
   const handleImportText = async () => {
     if (!importText.trim()) {
-      setImportStatus({ type: "error", message: "Paste JSON or import a file first." });
+      setImportStatus({ type: "error", message: t("options_pasteJsonFirst") });
       return;
     }
 
@@ -390,13 +404,13 @@ export const OptionsPage: React.FC = () => {
     try {
       parsed = JSON.parse(importText);
     } catch (error) {
-      setImportStatus({ type: "error", message: "Invalid JSON. Please check the format." });
+      setImportStatus({ type: "error", message: t("options_invalidJson") });
       return;
     }
 
     const sanitized = sanitizeImportedConfig(parsed);
     if (!sanitized) {
-      setImportStatus({ type: "error", message: "Invalid configuration format." });
+      setImportStatus({ type: "error", message: t("options_invalidConfigFormat") });
       return;
     }
 
@@ -411,13 +425,13 @@ export const OptionsPage: React.FC = () => {
         if (!granted) {
           setImportStatus({
             type: "error",
-            message: "Permission denied. The extension will not work on the imported URL patterns.",
+            message: t("options_importPermissionDenied"),
           });
           return;
         }
       } catch (error) {
         console.error("Failed to request permissions:", error);
-        setImportStatus({ type: "error", message: "Failed to request permissions." });
+        setImportStatus({ type: "error", message: t("options_failedRequestPermissions") });
         return;
       }
     }
@@ -428,10 +442,10 @@ export const OptionsPage: React.FC = () => {
       setConfig(sanitized);
       setEditingButton(null);
       setEditingPattern(null);
-      setImportStatus({ type: "success", message: "Settings imported successfully." });
+      setImportStatus({ type: "success", message: t("options_importSuccess") });
     } catch (error) {
       console.error("Failed to import config:", error);
-      setImportStatus({ type: "error", message: "Failed to save imported settings." });
+      setImportStatus({ type: "error", message: t("options_failedSaveImport") });
     }
     setSaving(false);
   };
@@ -445,11 +459,11 @@ export const OptionsPage: React.FC = () => {
       setImportText(text);
       setImportStatus({
         type: "success",
-        message: "File loaded. Review and click Import JSON to apply.",
+        message: t("options_fileLoaded"),
       });
     } catch (error) {
       console.error("Failed to read import file:", error);
-      setImportStatus({ type: "error", message: "Failed to read file." });
+      setImportStatus({ type: "error", message: t("options_failedReadFile") });
     }
 
     event.target.value = "";
@@ -462,7 +476,7 @@ export const OptionsPage: React.FC = () => {
       <div className="gl-page">
         <div className="gl-main-content">
           <div className="gl-content-wrapper">
-            <div style={{ textAlign: "center", padding: "40px" }}>Loading configuration...</div>
+            <div style={{ textAlign: "center", padding: "40px" }}>{t("options_loading")}</div>
           </div>
         </div>
       </div>
@@ -475,7 +489,7 @@ export const OptionsPage: React.FC = () => {
         <div className="gl-main-content">
           <div className="gl-content-wrapper">
             <div style={{ textAlign: "center", padding: "40px", color: "var(--gl-btn-danger)" }}>
-              Failed to load configuration
+              {t("options_loadFailed")}
             </div>
           </div>
         </div>
@@ -485,7 +499,7 @@ export const OptionsPage: React.FC = () => {
 
   // Helper to get pattern labels for display
   const getPatternLabels = (patternIds: string[] | undefined): string[] => {
-    if (!patternIds || patternIds.length === 0) return ["All Patterns"];
+    if (!patternIds || patternIds.length === 0) return [t("options_allPatterns")];
     return patternIds.map((id) => {
       const pattern = config.urlPatterns.find((p) => p.id === id);
       return pattern?.label || pattern?.pattern || id;
@@ -555,7 +569,7 @@ export const OptionsPage: React.FC = () => {
                     setActiveTab("patterns");
                   }}
                 >
-                  <div className="gl-nav-item-state-indicator">URL Patterns</div>
+                  <div className="gl-nav-item-state-indicator">{t("options_tabPatterns")}</div>
                 </a>
               </li>
               <li className={activeTab === "buttons" ? "active" : ""}>
@@ -566,7 +580,7 @@ export const OptionsPage: React.FC = () => {
                     setActiveTab("buttons");
                   }}
                 >
-                  <div className="gl-nav-item-state-indicator">Buttons</div>
+                  <div className="gl-nav-item-state-indicator">{t("options_tabButtons")}</div>
                 </a>
               </li>
               <li className={activeTab === "fields" ? "active" : ""}>
@@ -577,7 +591,7 @@ export const OptionsPage: React.FC = () => {
                     setActiveTab("fields");
                   }}
                 >
-                  <div className="gl-nav-item-state-indicator">Field Config</div>
+                  <div className="gl-nav-item-state-indicator">{t("options_tabFields")}</div>
                 </a>
               </li>
               <li className={activeTab === "settings" ? "active" : ""}>
@@ -588,7 +602,7 @@ export const OptionsPage: React.FC = () => {
                     setActiveTab("settings");
                   }}
                 >
-                  <div className="gl-nav-item-state-indicator">Settings</div>
+                  <div className="gl-nav-item-state-indicator">{t("options_tabSettings")}</div>
                 </a>
               </li>
               <li className={activeTab === "help" ? "active" : ""}>
@@ -599,14 +613,14 @@ export const OptionsPage: React.FC = () => {
                     setActiveTab("help");
                   }}
                 >
-                  <div className="gl-nav-item-state-indicator">Help</div>
+                  <div className="gl-nav-item-state-indicator">{t("options_tabHelp")}</div>
                 </a>
               </li>
             </ul>
             <ul className="gl-navbar-right nav navbar-nav navbar-right">
               <li>
                 <span style={{ padding: "15px", color: "var(--gl-text-muted)", fontSize: "12px" }}>
-                  {saving ? "Saving..." : "Auto-saved"}
+                  {saving ? t("options_saving") : t("options_autoSaved")}
                 </span>
               </li>
             </ul>
@@ -624,11 +638,11 @@ export const OptionsPage: React.FC = () => {
                 <div className="gl-page-header">
                   <div className="gl-page-header-main">
                     <h1>
-                      {activeTab === "patterns" && "URL Patterns"}
-                      {activeTab === "buttons" && "Action Buttons"}
-                      {activeTab === "fields" && "Field Configuration"}
-                      {activeTab === "settings" && "Settings"}
-                      {activeTab === "help" && "Help"}
+                      {activeTab === "patterns" && t("options_tabPatterns")}
+                      {activeTab === "buttons" && t("options_tabButtons")}
+                      {activeTab === "fields" && t("options_tabFields")}
+                      {activeTab === "settings" && t("options_tabSettings")}
+                      {activeTab === "help" && t("options_tabHelp")}
                     </h1>
                   </div>
                 </div>
@@ -651,11 +665,10 @@ export const OptionsPage: React.FC = () => {
                             </div>
                             <div className="gl-alert-body">
                               <div className="gl-alert-title">
-                                <span>URL Patterns</span>
+                                <span>{t("options_patternsInfoTitle")}</span>
                               </div>
                               <div className="gl-alert-message">
-                                Define which Graylog instances the extension should activate on. Use
-                                wildcards (*) to match multiple paths. Example:{" "}
+                                {t("options_patternsInfoMessage")}{" "}
                                 <code>https://graylog.company.com/*</code>
                               </div>
                             </div>
@@ -668,9 +681,9 @@ export const OptionsPage: React.FC = () => {
                     <div className="gl-content gl-row">
                       <div className="col-xs-12">
                         <div className="gl-section-header">
-                          <h2>Configured Patterns</h2>
+                          <h2>{t("options_configuredPatterns")}</h2>
                           <button className="gl-btn btn btn-success" onClick={handleAddPattern}>
-                            <PlusIcon /> Add Pattern
+                            <PlusIcon /> {t("options_addPattern")}
                           </button>
                         </div>
 
@@ -680,7 +693,7 @@ export const OptionsPage: React.FC = () => {
                             <input
                               type="text"
                               className="gl-form-control form-control"
-                              placeholder="Search patterns..."
+                              placeholder={t("options_searchPatterns")}
                               value={patternSearch}
                               onChange={(e) => setPatternSearch(e.target.value)}
                             />
@@ -689,17 +702,17 @@ export const OptionsPage: React.FC = () => {
 
                         {config.urlPatterns.length === 0 ? (
                           <p className="gl-help-block">
-                            No URL patterns configured. Add one to get started.
+                            {t("options_noPatternsConfigured")}
                           </p>
                         ) : filteredPatterns.length === 0 ? (
-                          <p className="gl-help-block">No patterns match your search.</p>
+                          <p className="gl-help-block">{t("options_noPatternsMatch")}</p>
                         ) : (
                           <div style={{ marginTop: "16px" }}>
                             {filteredPatterns.map((pattern) => (
                               <div key={pattern.id} className="gl-list-item">
                                 <div className="gl-list-item-content">
                                   <div className="gl-list-item-title">
-                                    {pattern.label || "Unnamed Pattern"}
+                                    {pattern.label || t("options_unnamedPattern")}
                                   </div>
                                   <div className="gl-list-item-subtitle">{pattern.pattern}</div>
                                 </div>
@@ -740,13 +753,13 @@ export const OptionsPage: React.FC = () => {
                         <div className="gl-modal">
                           <div className="gl-modal-header">
                             <h2>
-                              {editingPattern.id.startsWith("id-") ? "Edit Pattern" : "Add Pattern"}
+                              {editingPattern.id.startsWith("id-") ? t("options_editPattern") : t("options_addPatternTitle")}
                             </h2>
                           </div>
                           <div className="gl-modal-body">
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                Label
+                                {t("options_label")}
                               </label>
                               <div className="col-sm-9">
                                 <input
@@ -756,18 +769,18 @@ export const OptionsPage: React.FC = () => {
                                   onChange={(e) =>
                                     setEditingPattern({ ...editingPattern, label: e.target.value })
                                   }
-                                  placeholder="Production Graylog"
+                                  placeholder={t("options_labelPlaceholder")}
                                 />
                                 <span className="gl-help-block help-block">
                                   <span className="gl-help-text">
-                                    A friendly name for this pattern.
+                                    {t("options_labelHelp")}
                                   </span>
                                 </span>
                               </div>
                             </div>
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                URL Pattern
+                                {t("options_urlPattern")}
                               </label>
                               <div className="col-sm-9">
                                 <input
@@ -780,11 +793,11 @@ export const OptionsPage: React.FC = () => {
                                       pattern: e.target.value,
                                     })
                                   }
-                                  placeholder="https://graylog.company.com/*"
+                                  placeholder={t("options_urlPatternPlaceholder")}
                                 />
                                 <span className="gl-help-block help-block">
                                   <span className="gl-help-text">
-                                    URL pattern with optional wildcard (*).
+                                    {t("options_urlPatternHelp")}
                                   </span>
                                 </span>
                               </div>
@@ -795,10 +808,10 @@ export const OptionsPage: React.FC = () => {
                               className="gl-btn btn btn-default"
                               onClick={() => setEditingPattern(null)}
                             >
-                              Cancel
+                              {t("options_cancel")}
                             </button>
                             <button className="gl-btn btn btn-success" onClick={handleSavePattern}>
-                              Save Pattern
+                              {t("options_savePattern")}
                             </button>
                           </div>
                         </div>
@@ -820,11 +833,10 @@ export const OptionsPage: React.FC = () => {
                             </div>
                             <div className="gl-alert-body">
                               <div className="gl-alert-title">
-                                <span>Action Buttons</span>
+                                <span>{t("options_buttonsInfoTitle")}</span>
                               </div>
                               <div className="gl-alert-message">
-                                Configure buttons that appear on log rows. Use field bindings to
-                                insert log data into URLs. Example URL:{" "}
+                                {t("options_buttonsInfoMessage")}{" "}
                                 <code>https://admin.company.com/users/{`{userId}`}</code>
                               </div>
                             </div>
@@ -837,9 +849,9 @@ export const OptionsPage: React.FC = () => {
                     <div className="gl-content gl-row">
                       <div className="col-xs-12">
                         <div className="gl-section-header">
-                          <h2>Configured Buttons</h2>
+                          <h2>{t("options_configuredButtons")}</h2>
                           <button className="gl-btn btn btn-success" onClick={handleAddButton}>
-                            <PlusIcon /> Add Button
+                            <PlusIcon /> {t("options_addButton")}
                           </button>
                         </div>
 
@@ -861,7 +873,7 @@ export const OptionsPage: React.FC = () => {
                               <input
                                 type="text"
                                 className="gl-form-control form-control"
-                                placeholder="Search buttons..."
+                                placeholder={t("options_searchButtons")}
                                 value={buttonSearch}
                                 onChange={(e) => setButtonSearch(e.target.value)}
                               />
@@ -875,8 +887,8 @@ export const OptionsPage: React.FC = () => {
                                 value={buttonPatternFilter}
                                 onChange={(e) => setButtonPatternFilter(e.target.value)}
                               >
-                                <option value="all">All Patterns</option>
-                                <option value="none">No Pattern</option>
+                                <option value="all">{t("options_allPatterns")}</option>
+                                <option value="none">{t("options_noPattern")}</option>
                                 {config.urlPatterns.map((pattern) => (
                                   <option key={pattern.id} value={pattern.id}>
                                     {pattern.label || pattern.pattern}
@@ -889,10 +901,10 @@ export const OptionsPage: React.FC = () => {
 
                         {config.buttons.length === 0 ? (
                           <p className="gl-help-block">
-                            No buttons configured. Add one to get started.
+                            {t("options_noButtonsConfigured")}
                           </p>
                         ) : filteredButtons.length === 0 ? (
-                          <p className="gl-help-block">No buttons match your search criteria.</p>
+                          <p className="gl-help-block">{t("options_noButtonsMatch")}</p>
                         ) : (
                           <div style={{ marginTop: "16px" }}>
                             {filteredButtons.map((button) => (
@@ -900,7 +912,7 @@ export const OptionsPage: React.FC = () => {
                                 <div className="gl-list-item-content">
                                   <div className="gl-list-item-title">
                                     <span className={`gl-badge gl-badge-${button.color}`}>
-                                      {button.label || "Unnamed Button"}
+                                      {button.label || t("options_unnamedButton")}
                                     </span>
                                   </div>
                                   <div
@@ -912,7 +924,7 @@ export const OptionsPage: React.FC = () => {
                                       gap: "6px",
                                     }}
                                   >
-                                    <span>{button.url || "No URL configured"}</span>
+                                    <span>{button.url || t("options_noUrlConfigured")}</span>
                                     {button.url && (
                                       <span style={{ color: "var(--gl-text-muted)" }}>•</span>
                                     )}
@@ -975,14 +987,14 @@ export const OptionsPage: React.FC = () => {
                           <div className="gl-modal-header">
                             <h2>
                               {config.buttons.find((b) => b.id === editingButton.id)
-                                ? "Edit Button"
-                                : "Add Button"}
+                                ? t("options_editButton")
+                                : t("options_addButtonTitle")}
                             </h2>
                           </div>
                           <div className="gl-modal-body">
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                Label
+                                {t("options_label")}
                               </label>
                               <div className="col-sm-9">
                                 <input
@@ -998,7 +1010,7 @@ export const OptionsPage: React.FC = () => {
                             </div>
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                URL Template
+                                {t("options_urlTemplate")}
                               </label>
                               <div className="col-sm-9">
                                 <input
@@ -1010,8 +1022,7 @@ export const OptionsPage: React.FC = () => {
                                 />
                                 <span className="gl-help-block help-block">
                                   <span className="gl-help-text">
-                                    Use {`{fieldName}`} placeholders for dynamic values. Map them to
-                                    actual log field paths below.
+                                    {t("options_urlTemplateHelp")}
                                   </span>
                                 </span>
                               </div>
@@ -1021,7 +1032,7 @@ export const OptionsPage: React.FC = () => {
                             {editingButton.fieldBindings.length > 0 && (
                               <div className="gl-form-group form-group">
                                 <label className="gl-control-label col-sm-3 control-label">
-                                  Field Mappings
+                                  {t("options_fieldMappings")}
                                 </label>
                                 <div className="col-sm-9">
                                   <div style={{ marginBottom: "8px" }}>
@@ -1029,8 +1040,7 @@ export const OptionsPage: React.FC = () => {
                                       className="gl-help-text"
                                       style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}
                                     >
-                                      Map URL placeholders to actual log field paths. Leave empty to
-                                      use the placeholder name as the field path directly.
+                                      {t("options_fieldMappingsHelp")}
                                     </span>
                                   </div>
                                   {editingButton.fieldBindings.map((binding) => (
@@ -1082,7 +1092,7 @@ export const OptionsPage: React.FC = () => {
                             )}
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                Color
+                                {t("options_color")}
                               </label>
                               <div className="col-sm-9">
                                 <select
@@ -1095,11 +1105,11 @@ export const OptionsPage: React.FC = () => {
                                     })
                                   }
                                 >
-                                  <option value="primary">Primary (Blue)</option>
-                                  <option value="success">Success (Green)</option>
-                                  <option value="warning">Warning (Yellow)</option>
-                                  <option value="danger">Danger (Red)</option>
-                                  <option value="default">Default (Gray)</option>
+                                  <option value="primary">{t("options_colorPrimary")}</option>
+                                  <option value="success">{t("options_colorSuccess")}</option>
+                                  <option value="warning">{t("options_colorWarning")}</option>
+                                  <option value="danger">{t("options_colorDanger")}</option>
+                                  <option value="default">{t("options_colorDefault")}</option>
                                 </select>
                               </div>
                             </div>
@@ -1107,7 +1117,7 @@ export const OptionsPage: React.FC = () => {
                             {/* URL Pattern Selection */}
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                URL Patterns
+                                {t("options_urlPatterns")}
                               </label>
                               <div className="col-sm-9">
                                 <div style={{ marginBottom: "8px" }}>
@@ -1115,13 +1125,12 @@ export const OptionsPage: React.FC = () => {
                                     className="gl-help-text"
                                     style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}
                                   >
-                                    Select which URL patterns this button should appear on. Leave
-                                    empty for all patterns.
+                                    {t("options_urlPatternsHelp")}
                                   </span>
                                 </div>
                                 {config.urlPatterns.length === 0 ? (
                                   <p className="gl-help-block" style={{ fontStyle: "italic" }}>
-                                    No URL patterns configured. Button will appear on all pages.
+                                    {t("options_noPatternsForButton")}
                                   </p>
                                 ) : (
                                   <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
@@ -1165,7 +1174,7 @@ export const OptionsPage: React.FC = () => {
                             {/* Conditions */}
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                Conditions
+                                {t("options_conditions")}
                               </label>
                               <div className="col-sm-9">
                                 <div style={{ marginBottom: "8px" }}>
@@ -1173,7 +1182,7 @@ export const OptionsPage: React.FC = () => {
                                     className="gl-help-text"
                                     style={{ fontSize: "12px", color: "var(--gl-text-muted)" }}
                                   >
-                                    Button will only appear when all conditions are met.
+                                    {t("options_conditionsHelp")}
                                   </span>
                                 </div>
 
@@ -1191,7 +1200,7 @@ export const OptionsPage: React.FC = () => {
                                       type="text"
                                       className="gl-form-control form-control"
                                       style={{ flex: "1" }}
-                                      placeholder="Field name"
+                                      placeholder={t("options_fieldName")}
                                       value={condition.field}
                                       onChange={(e) =>
                                         handleUpdateCondition(index, { field: e.target.value })
@@ -1207,18 +1216,18 @@ export const OptionsPage: React.FC = () => {
                                         })
                                       }
                                     >
-                                      <option value="exists">Exists</option>
-                                      <option value="equals">Equals</option>
-                                      <option value="notEquals">Not Equals</option>
-                                      <option value="contains">Contains</option>
-                                      <option value="startsWith">Starts With</option>
+                                      <option value="exists">{t("options_exists")}</option>
+                                      <option value="equals">{t("options_equals")}</option>
+                                      <option value="notEquals">{t("options_notEquals")}</option>
+                                      <option value="contains">{t("options_contains")}</option>
+                                      <option value="startsWith">{t("options_startsWith")}</option>
                                     </select>
                                     {condition.operator !== "exists" && (
                                       <input
                                         type="text"
                                         className="gl-form-control form-control"
                                         style={{ flex: "1" }}
-                                        placeholder="Value"
+                                        placeholder={t("options_value")}
                                         value={condition.value || ""}
                                         onChange={(e) =>
                                           handleUpdateCondition(index, { value: e.target.value })
@@ -1229,7 +1238,7 @@ export const OptionsPage: React.FC = () => {
                                       type="button"
                                       className="gl-btn-icon gl-btn-icon-danger"
                                       onClick={() => handleRemoveCondition(index)}
-                                      title="Remove condition"
+                                      title={t("options_removeCondition")}
                                     >
                                       <TrashIcon />
                                     </button>
@@ -1246,7 +1255,7 @@ export const OptionsPage: React.FC = () => {
                                   }}
                                   onClick={handleAddCondition}
                                 >
-                                  <PlusIcon /> Add Condition
+                                  <PlusIcon /> {t("options_addCondition")}
                                 </button>
                               </div>
                             </div>
@@ -1254,7 +1263,7 @@ export const OptionsPage: React.FC = () => {
                             {/* Options */}
                             <div className="gl-form-group form-group">
                               <label className="gl-control-label col-sm-3 control-label">
-                                Options
+                                {t("options_options")}
                               </label>
                               <div className="col-sm-9">
                                 <div className="checkbox">
@@ -1269,7 +1278,7 @@ export const OptionsPage: React.FC = () => {
                                         })
                                       }
                                     />
-                                    Open in new tab
+                                    {t("options_openInNewTab")}
                                   </label>
                                 </div>
                                 <div className="checkbox">
@@ -1284,7 +1293,7 @@ export const OptionsPage: React.FC = () => {
                                         })
                                       }
                                     />
-                                    Enabled
+                                    {t("options_enabled")}
                                   </label>
                                 </div>
                               </div>
@@ -1295,10 +1304,10 @@ export const OptionsPage: React.FC = () => {
                               className="gl-btn btn btn-default"
                               onClick={() => setEditingButton(null)}
                             >
-                              Cancel
+                              {t("options_cancel")}
                             </button>
                             <button className="gl-btn btn btn-success" onClick={handleSaveButton}>
-                              Save Button
+                              {t("options_saveButton")}
                             </button>
                           </div>
                         </div>
@@ -1312,12 +1321,12 @@ export const OptionsPage: React.FC = () => {
                   <div className="gl-content gl-row">
                     <div className="col-xs-12">
                       <div className="gl-section-header">
-                        <h2>Field Discovery Configuration</h2>
+                        <h2>{t("options_fieldDiscoveryConfig")}</h2>
                       </div>
                       <form className="gl-form form-horizontal">
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            Default Message Field
+                            {t("options_defaultMessageField")}
                           </label>
                           <div className="col-sm-9">
                             <input
@@ -1330,18 +1339,18 @@ export const OptionsPage: React.FC = () => {
                                   e.target.value || null,
                                 )
                               }
-                              placeholder="Auto-detect"
+                              placeholder={t("options_autoDetect")}
                             />
                             <span className="gl-help-block help-block">
                               <span className="gl-help-text">
-                                The field to parse for JSON content. Leave empty for auto-detection.
+                                {t("options_defaultMessageFieldHelp")}
                               </span>
                             </span>
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            Field Prefixes
+                            {t("options_fieldPrefixes")}
                           </label>
                           <div className="col-sm-9">
                             <input
@@ -1361,14 +1370,14 @@ export const OptionsPage: React.FC = () => {
                             />
                             <span className="gl-help-block help-block">
                               <span className="gl-help-text">
-                                Comma-separated list of field prefixes to search.
+                                {t("options_fieldPrefixesHelp")}
                               </span>
                             </span>
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            JSON String Parsing
+                            {t("options_jsonStringParsing")}
                           </label>
                           <div className="col-sm-9">
                             <div className="checkbox">
@@ -1380,20 +1389,19 @@ export const OptionsPage: React.FC = () => {
                                     handleFieldConfigChange("parseJsonStrings", e.target.checked)
                                   }
                                 />
-                                Parse JSON strings in field values
+                                {t("options_parseJsonStrings")}
                               </label>
                             </div>
                             <span className="gl-help-block help-block">
                               <span className="gl-help-text">
-                                When enabled, string values that contain JSON will be parsed and
-                                their nested fields will be available for button bindings.
+                                {t("options_parseJsonStringsHelp")}
                               </span>
                             </span>
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            Max Parse Depth
+                            {t("options_maxParseDepth")}
                           </label>
                           <div className="col-sm-9">
                             <input
@@ -1412,7 +1420,7 @@ export const OptionsPage: React.FC = () => {
                             />
                             <span className="gl-help-block help-block">
                               <span className="gl-help-text">
-                                Maximum recursion depth for parsing nested JSON strings (1-10).
+                                {t("options_maxParseDepthHelp")}
                               </span>
                             </span>
                           </div>
@@ -1427,12 +1435,12 @@ export const OptionsPage: React.FC = () => {
                   <div className="gl-content gl-row">
                     <div className="col-xs-12">
                       <div className="gl-section-header">
-                        <h2>Application Settings</h2>
+                        <h2>{t("options_applicationSettings")}</h2>
                       </div>
                       <form className="gl-form form-horizontal">
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            Extension
+                            {t("options_extension")}
                           </label>
                           <div className="col-sm-9">
                             <div className="checkbox">
@@ -1442,14 +1450,14 @@ export const OptionsPage: React.FC = () => {
                                   checked={config.settings.enabled}
                                   onChange={(e) => handleSettingChange("enabled", e.target.checked)}
                                 />
-                                Enable extension
+                                {t("options_enableExtension")}
                               </label>
                             </div>
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            Features
+                            {t("options_features")}
                           </label>
                           <div className="col-sm-9">
                             <div className="checkbox">
@@ -1461,7 +1469,7 @@ export const OptionsPage: React.FC = () => {
                                     handleSettingChange("showMessageDetailButton", e.target.checked)
                                   }
                                 />
-                                Enable message detail button
+                                {t("options_enableMessageDetail")}
                               </label>
                             </div>
                             <div className="checkbox">
@@ -1473,7 +1481,7 @@ export const OptionsPage: React.FC = () => {
                                     handleSettingChange("searchHistoryEnabled", e.target.checked)
                                   }
                                 />
-                                Enable search history
+                                {t("options_enableSearchHistory")}
                               </label>
                             </div>
                             <div className="checkbox">
@@ -1485,7 +1493,7 @@ export const OptionsPage: React.FC = () => {
                                     handleSettingChange("jsonViewerEnabled", e.target.checked)
                                   }
                                 />
-                                Enable JSON viewer
+                                {t("options_enableJsonViewer")}
                               </label>
                             </div>
                             <div className="checkbox">
@@ -1500,14 +1508,37 @@ export const OptionsPage: React.FC = () => {
                                     )
                                   }
                                 />
-                                Enable keyboard shortcuts
+                                {t("options_enableKeyboardShortcuts")}
                               </label>
                             </div>
                           </div>
                         </div>
                         <div className="gl-form-group form-group">
                           <label className="gl-control-label col-sm-3 control-label">
-                            Import / Export
+                            {t("options_language")}
+                          </label>
+                          <div className="col-sm-9">
+                            <select
+                              className="gl-select form-control"
+                              value={locale}
+                              onChange={(e) => handleLanguageChange(e.target.value as Locale)}
+                            >
+                              {SUPPORTED_LOCALES.map((loc) => (
+                                <option key={loc.code} value={loc.code}>
+                                  {loc.label}
+                                </option>
+                              ))}
+                            </select>
+                            <span className="gl-help-block help-block">
+                              <span className="gl-help-text">
+                                {t("options_languageHelp")}
+                              </span>
+                            </span>
+                          </div>
+                        </div>
+                        <div className="gl-form-group form-group">
+                          <label className="gl-control-label col-sm-3 control-label">
+                            {t("options_importExport")}
                           </label>
                           <div className="col-sm-9">
                             <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
@@ -1516,10 +1547,10 @@ export const OptionsPage: React.FC = () => {
                                 type="button"
                                 onClick={handleExportConfig}
                               >
-                                Export settings
+                                {t("options_exportSettings")}
                               </button>
                               <label className="gl-btn btn btn-default" style={{ marginBottom: 0 }}>
-                                Import from file
+                                {t("options_importFromFile")}
                                 <input
                                   type="file"
                                   accept="application/json"
@@ -1533,7 +1564,7 @@ export const OptionsPage: React.FC = () => {
                                 className="gl-form-control form-control"
                                 rows={10}
                                 style={{ minHeight: "220px" }}
-                                placeholder="Paste exported JSON here..."
+                                placeholder={t("options_pasteJsonPlaceholder")}
                                 value={importText}
                                 onChange={(e) => setImportText(e.target.value)}
                               />
@@ -1551,7 +1582,7 @@ export const OptionsPage: React.FC = () => {
                                 type="button"
                                 onClick={handleImportText}
                               >
-                                Import JSON
+                                {t("options_importJson")}
                               </button>
                               <button
                                 className="gl-btn btn btn-default"
@@ -1561,7 +1592,7 @@ export const OptionsPage: React.FC = () => {
                                   setImportStatus(null);
                                 }}
                               >
-                                Clear
+                                {t("options_clear")}
                               </button>
                             </div>
                             {importStatus && (
@@ -1579,7 +1610,7 @@ export const OptionsPage: React.FC = () => {
                             )}
                             <span className="gl-help-block help-block">
                               <span className="gl-help-text">
-                                Importing overwrites your current settings.
+                                {t("options_importOverwriteWarning")}
                               </span>
                             </span>
                           </div>
@@ -1596,7 +1627,7 @@ export const OptionsPage: React.FC = () => {
                     <div className="gl-content gl-row">
                       <div className="col-xs-12">
                         <div className="gl-section-header">
-                          <h2>Keyboard Shortcuts</h2>
+                          <h2>{t("options_keyboardShortcuts")}</h2>
                         </div>
                         <div className="table-responsive">
                           <table
@@ -1609,8 +1640,8 @@ export const OptionsPage: React.FC = () => {
                           >
                             <thead>
                               <tr>
-                                <th style={{ width: "30%" }}>Shortcut</th>
-                                <th>Action</th>
+                                <th style={{ width: "30%" }}>{t("options_shortcut")}</th>
+                                <th>{t("options_action")}</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -1654,7 +1685,7 @@ export const OptionsPage: React.FC = () => {
                                     H
                                   </kbd>
                                 </td>
-                                <td>Open the Search History popup (when in Graylog).</td>
+                                <td>{t("options_shortcutHistoryDesc")}</td>
                               </tr>
                               <tr>
                                 <td>
@@ -1678,7 +1709,7 @@ export const OptionsPage: React.FC = () => {
                                   </kbd>
                                 </td>
                                 <td>
-                                  Close open overlays (Search History, JSON Viewer, Field Selector).
+                                  {t("options_shortcutEscDesc")}
                                 </td>
                               </tr>
                               <tr>
@@ -1703,8 +1734,7 @@ export const OptionsPage: React.FC = () => {
                                   </kbd>
                                 </td>
                                 <td>
-                                  Save the current query to search history and execute search (when
-                                  focusing Graylog query editor).
+                                  {t("options_shortcutEnterDesc")}
                                 </td>
                               </tr>
                             </tbody>
@@ -1717,7 +1747,7 @@ export const OptionsPage: React.FC = () => {
                     <div className="gl-content gl-row">
                       <div className="col-xs-12">
                         <div className="gl-section-header">
-                          <h2>Useful Links</h2>
+                          <h2>{t("options_usefulLinks")}</h2>
                         </div>
                         <div style={{ marginTop: "16px" }}>
                           <div className="gl-list-item">
@@ -1729,11 +1759,11 @@ export const OptionsPage: React.FC = () => {
                                   rel="noopener noreferrer"
                                   style={{ color: "var(--gt-primary)", textDecoration: "none" }}
                                 >
-                                  Report an Issue
+                                  {t("options_reportIssue")}
                                 </a>
                               </div>
                               <div className="gl-list-item-subtitle">
-                                Found a bug or have a feature request? Open an issue on GitHub.
+                                {t("options_reportIssueDesc")}
                               </div>
                             </div>
                           </div>
@@ -1746,11 +1776,11 @@ export const OptionsPage: React.FC = () => {
                                   rel="noopener noreferrer"
                                   style={{ color: "var(--gt-primary)", textDecoration: "none" }}
                                 >
-                                  Documentation
+                                  {t("options_documentation")}
                                 </a>
                               </div>
                               <div className="gl-list-item-subtitle">
-                                Read the documentation to learn how to use Graytool effectively.
+                                {t("options_documentationDesc")}
                               </div>
                             </div>
                           </div>
@@ -1763,11 +1793,11 @@ export const OptionsPage: React.FC = () => {
                                   rel="noopener noreferrer"
                                   style={{ color: "var(--gt-primary)", textDecoration: "none" }}
                                 >
-                                  Changelog
+                                  {t("options_changelog")}
                                 </a>
                               </div>
                               <div className="gl-list-item-subtitle">
-                                View the release history and changelog.
+                                {t("options_changelogDesc")}
                               </div>
                             </div>
                           </div>
@@ -1779,12 +1809,12 @@ export const OptionsPage: React.FC = () => {
                     <div className="gl-content gl-row">
                       <div className="col-xs-12">
                         <div className="gl-section-header">
-                          <h2>Extension Information</h2>
+                          <h2>{t("options_extensionInfo")}</h2>
                         </div>
                         <div style={{ marginTop: "16px" }}>
                           <div className="gl-list-item" style={{ cursor: "default" }}>
                             <div className="gl-list-item-content">
-                              <div className="gl-list-item-title">GitHub Repository</div>
+                              <div className="gl-list-item-title">{t("options_githubRepo")}</div>
                               <div className="gl-list-item-subtitle">
                                 <a
                                   href="https://github.com/bozkurtemre/graytool"
@@ -1799,7 +1829,7 @@ export const OptionsPage: React.FC = () => {
                           </div>
                           <div className="gl-list-item" style={{ cursor: "default" }}>
                             <div className="gl-list-item-content">
-                              <div className="gl-list-item-title">Developer</div>
+                              <div className="gl-list-item-title">{t("options_developer")}</div>
                               <div className="gl-list-item-subtitle">
                                 <a
                                   href="https://emreb.dev"
@@ -1824,7 +1854,7 @@ export const OptionsPage: React.FC = () => {
       </div>
 
       {/* Footer */}
-      <footer className="gl-footer">Graytool Chrome Extension</footer>
+      <footer className="gl-footer">{t("options_footer")}</footer>
     </div>
   );
 };

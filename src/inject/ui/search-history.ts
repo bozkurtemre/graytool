@@ -3,6 +3,7 @@
 
 import { getSearchHistory, saveSearchQuery, clearSearchHistory } from "../../shared/storage";
 import type { SearchHistoryEntry } from "../../shared/types";
+import { t } from "../../shared/i18n";
 
 // ─── State ────────────────────────────────────────────────────────
 
@@ -183,7 +184,7 @@ function handleKeydown(e: KeyboardEvent): void {
 function applySearchQuery(query: string): void {
   const queryEditor = document.getElementById("QueryEditor");
   if (!queryEditor) {
-    alert("Could not find Graylog search editor.");
+    alert(t("searchHistory_editorNotFound"));
     return;
   }
 
@@ -222,7 +223,7 @@ function applySearchQuery(query: string): void {
     }, 100);
   } else {
     // If we can't find the text area, show an alert with the query so user can copy it manually
-    prompt("Graylog editor not found. You can copy your query below:", query);
+    prompt(t("searchHistory_editorNotFoundPrompt"), query);
   }
 }
 
@@ -279,7 +280,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   const title = document.createElement("div");
   title.className = "gt-json-header-title";
   title.innerHTML =
-    '<i class="fas fa-history fa-fw" style="margin-right: 6px;"></i> Search History';
+    '<i class="fas fa-history fa-fw" style="margin-right: 6px;"></i> ' + t("searchHistory_title");
 
   const actions = document.createElement("div");
   actions.className = "gt-json-header-actions";
@@ -287,9 +288,9 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   const clearBtn = document.createElement("button");
   clearBtn.className = "gt-json-header-btn gt-history-clear-btn";
   clearBtn.innerHTML = '<i class="fas fa-trash fa-fw"></i>';
-  clearBtn.title = "Clear History";
+  clearBtn.title = t("searchHistory_clearHistory");
   clearBtn.addEventListener("click", async () => {
-    if (confirm("Are you sure you want to clear your search history for this environment?")) {
+    if (confirm(t("searchHistory_clearConfirm"))) {
       await clearSearchHistory(currentPatternId!);
       closeHistoryPanel();
     }
@@ -298,7 +299,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
   const closeBtn = document.createElement("button");
   closeBtn.className = "gt-json-header-btn";
   closeBtn.innerHTML = '<i class="fas fa-times fa-fw"></i>';
-  closeBtn.title = "Close (Esc)";
+  closeBtn.title = t("searchHistory_closeEsc");
   closeBtn.addEventListener("click", closeHistoryPanel);
 
   // Only show clear button if there is history
@@ -319,7 +320,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
 
   const searchInput = document.createElement("input");
   searchInput.type = "text";
-  searchInput.placeholder = "Search in history...";
+  searchInput.placeholder = t("searchHistory_searchPlaceholder");
   searchInput.style.width = "100%";
   searchInput.style.padding = "8px 10px";
   searchInput.style.border = "1px solid var(--gt-border)";
@@ -346,7 +347,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
     emptyMsg.style.padding = "30px 20px";
     emptyMsg.style.color = "var(--gt-text-muted)";
     emptyMsg.textContent =
-      "No search history recorded yet. Execute a search in Graylog to save it.";
+      t("searchHistory_emptyMessage");
     body.appendChild(emptyMsg);
     searchInput.disabled = true;
   } else {
@@ -406,7 +407,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
       const copyBtn = document.createElement("button");
       copyBtn.className = "gt-json-header-btn";
       copyBtn.innerHTML = '<i class="fas fa-copy fa-fw"></i>';
-      copyBtn.title = "Copy to clipboard";
+      copyBtn.title = t("searchHistory_copyToClipboard");
       copyBtn.style.padding = "6px";
       copyBtn.style.marginTop = "2px";
       copyBtn.style.color = "var(--gt-text-muted)";
