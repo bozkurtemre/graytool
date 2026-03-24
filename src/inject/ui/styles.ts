@@ -136,7 +136,7 @@ const DARK_THEME_VARIABLES = `
   --gt-text-link: rgb(98, 157, 226);
 
   /* JSON Viewer (Dark theme) */
-  --gt-json-key: #56B6C2;
+  --gt-json-key: rgb(127, 163, 212);
   --gt-json-string: #98C379;
   --gt-json-number: #D19A66;
   --gt-json-boolean: #C678DD;
@@ -192,7 +192,7 @@ const LIGHT_THEME_VARIABLES = `
   --gt-text-link: rgb(87, 141, 204);
 
   /* JSON Viewer (Light theme) */
-  --gt-json-key: #0066CC;
+  --gt-json-key: rgb(127, 163, 212);
   --gt-json-string: #22863A;
   --gt-json-number: #B08800;
   --gt-json-boolean: #6F42C1;

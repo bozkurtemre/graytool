@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Graytool: graylog developer toolkit",
-  "version": "2.0.1",
-  "description": "It provides a suite of tools and features that streamline log management, debugging, and monitoring tasks.",
+  "version": "2.0.2",
+  "description": "Supercharge Graylog with customizable action buttons, auto field discovery, JSON viewer, search history, and more.",
   "permissions": ["storage", "activeTab", "scripting", "tabs"],
   "optional_host_permissions": ["<all_urls>"],
   "action": {

@@ -56,6 +56,8 @@ export interface GlobalFieldConfig {
   defaultMessageField?: string | null; // null/undefined = auto-detect
   rowFieldPrefixes: string[]; // ["msg.", "context.", ""]
   searchPrefixes?: string[]; // alias for popup UI
+  parseJsonStrings?: boolean; // Parse JSON strings in field values (default: true)
+  jsonParseMaxDepth?: number; // Max recursion depth for JSON string parsing (default: 5)
 }
 
 // ─── App Settings ─────────────────────────────────────────────

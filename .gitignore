@@ -60,3 +60,6 @@ jspm_packages/
 
 # Optional eslint cache
 .eslintcache
+
+# Coding AI files
+plans/
