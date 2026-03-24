@@ -225,7 +225,7 @@ function createHeader(panel: HTMLElement): HTMLElement {
 
   const title = document.createElement("div");
   title.className = "gt-json-header-title";
-  title.innerHTML = "Message Detail";
+  title.innerHTML = "Detail View";
 
   const actions = document.createElement("div");
   actions.className = "gt-json-header-actions";
