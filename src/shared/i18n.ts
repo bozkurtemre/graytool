@@ -65,8 +65,7 @@ const messages: Record<Locale, Record<string, string>> = {
     searchHistory_clearConfirm:
       "Are you sure you want to clear your search history for this environment?",
     searchHistory_editorNotFound: "Could not find Graylog search editor.",
-    searchHistory_editorNotFoundPrompt:
-      "Graylog editor not found. You can copy your query below:",
+    searchHistory_editorNotFoundPrompt: "Graylog editor not found. You can copy your query below:",
     searchHistory_copyToClipboard: "Copy to clipboard",
 
     // ── Button Injector ────────────────────────────────────
@@ -210,8 +209,7 @@ const messages: Record<Locale, Record<string, string>> = {
     options_footer: "Graytool Chrome Extension",
 
     // Errors / Status
-    options_permissionDenied:
-      "Permission denied. The extension will not work on this URL pattern.",
+    options_permissionDenied: "Permission denied. The extension will not work on this URL pattern.",
     options_pasteJsonFirst: "Paste JSON or import a file first.",
     options_invalidJson: "Invalid JSON. Please check the format.",
     options_invalidConfigFormat: "Invalid configuration format.",
@@ -299,8 +297,7 @@ const messages: Record<Locale, Record<string, string>> = {
     options_configuredPatterns: "Yapılandırılmış Kalıplar",
     options_addPattern: "Kalıp Ekle",
     options_searchPatterns: "Kalıplarda ara...",
-    options_noPatternsConfigured:
-      "Yapılandırılmış URL kalıbı yok. Başlamak için bir tane ekleyin.",
+    options_noPatternsConfigured: "Yapılandırılmış URL kalıbı yok. Başlamak için bir tane ekleyin.",
     options_noPatternsMatch: "Aramanızla eşleşen kalıp yok.",
     options_unnamedPattern: "İsimsiz Kalıp",
     options_editPattern: "Kalıbı Düzenle",
@@ -346,8 +343,7 @@ const messages: Record<Locale, Record<string, string>> = {
     options_urlPatterns: "URL Kalıpları",
     options_urlPatternsHelp:
       "Bu butonun hangi URL kalıplarında görüneceğini seçin. Tüm kalıplarda göstermek için boş bırakın.",
-    options_noPatternsForButton:
-      "Yapılandırılmış URL kalıbı yok. Buton tüm sayfalarda görünecek.",
+    options_noPatternsForButton: "Yapılandırılmış URL kalıbı yok. Buton tüm sayfalarda görünecek.",
     options_conditions: "Koşullar",
     options_conditionsHelp: "Buton yalnızca tüm koşullar sağlandığında görünecektir.",
     options_fieldName: "Alan adı",
@@ -423,8 +419,7 @@ const messages: Record<Locale, Record<string, string>> = {
     options_footer: "Graytool Chrome Uzantısı",
 
     // Errors / Status
-    options_permissionDenied:
-      "İzin reddedildi. Uzantı bu URL kalıbında çalışmayacaktır.",
+    options_permissionDenied: "İzin reddedildi. Uzantı bu URL kalıbında çalışmayacaktır.",
     options_pasteJsonFirst: "Önce JSON yapıştırın veya bir dosya içe aktarın.",
     options_invalidJson: "Geçersiz JSON. Lütfen formatı kontrol edin.",
     options_invalidConfigFormat: "Geçersiz yapılandırma formatı.",
@@ -433,8 +428,7 @@ const messages: Record<Locale, Record<string, string>> = {
     options_failedRequestPermissions: "İzin isteği başarısız oldu.",
     options_importSuccess: "Ayarlar başarıyla içe aktarıldı.",
     options_failedSaveImport: "İçe aktarılan ayarlar kaydedilemedi.",
-    options_fileLoaded:
-      "Dosya yüklendi. İnceleyip uygulamak için JSON İçe Aktar'a tıklayın.",
+    options_fileLoaded: "Dosya yüklendi. İnceleyip uygulamak için JSON İçe Aktar'a tıklayın.",
     options_failedReadFile: "Dosya okunamadı.",
   },
 };
@@ -448,10 +442,7 @@ const messages: Record<Locale, Record<string, string>> = {
 export function t(key: string, replacements?: Record<string, string>): string {
   const msg = messages[currentLocale]?.[key] || messages["en"][key] || key;
   if (!replacements) return msg;
-  return Object.entries(replacements).reduce(
-    (result, [k, v]) => result.replace(`{${k}}`, v),
-    msg,
-  );
+  return Object.entries(replacements).reduce((result, [k, v]) => result.replace(`{${k}}`, v), msg);
 }
 
 /** Get the current locale. */

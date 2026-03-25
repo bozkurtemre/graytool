@@ -232,7 +232,11 @@ function createHeader(panel: HTMLElement): HTMLElement {
   actions.className = "gt-json-header-actions";
 
   // Close
-  const closeBtn = createHeaderBtn('<i class="fas fa-times fa-fw"></i>', t("jsonViewer_close"), closeJsonViewer);
+  const closeBtn = createHeaderBtn(
+    '<i class="fas fa-times fa-fw"></i>',
+    t("jsonViewer_close"),
+    closeJsonViewer,
+  );
   actions.appendChild(closeBtn);
 
   header.appendChild(title);

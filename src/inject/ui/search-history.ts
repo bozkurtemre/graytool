@@ -346,8 +346,7 @@ function renderHistoryPanel(history: SearchHistoryEntry[]): void {
     emptyMsg.style.textAlign = "center";
     emptyMsg.style.padding = "30px 20px";
     emptyMsg.style.color = "var(--gt-text-muted)";
-    emptyMsg.textContent =
-      t("searchHistory_emptyMessage");
+    emptyMsg.textContent = t("searchHistory_emptyMessage");
     body.appendChild(emptyMsg);
     searchInput.disabled = true;
   } else {
