@@ -701,9 +701,7 @@ export const OptionsPage: React.FC = () => {
                         )}
 
                         {config.urlPatterns.length === 0 ? (
-                          <p className="gl-help-block">
-                            {t("options_noPatternsConfigured")}
-                          </p>
+                          <p className="gl-help-block">{t("options_noPatternsConfigured")}</p>
                         ) : filteredPatterns.length === 0 ? (
                           <p className="gl-help-block">{t("options_noPatternsMatch")}</p>
                         ) : (
@@ -753,7 +751,9 @@ export const OptionsPage: React.FC = () => {
                         <div className="gl-modal">
                           <div className="gl-modal-header">
                             <h2>
-                              {editingPattern.id.startsWith("id-") ? t("options_editPattern") : t("options_addPatternTitle")}
+                              {editingPattern.id.startsWith("id-")
+                                ? t("options_editPattern")
+                                : t("options_addPatternTitle")}
                             </h2>
                           </div>
                           <div className="gl-modal-body">
@@ -772,9 +772,7 @@ export const OptionsPage: React.FC = () => {
                                   placeholder={t("options_labelPlaceholder")}
                                 />
                                 <span className="gl-help-block help-block">
-                                  <span className="gl-help-text">
-                                    {t("options_labelHelp")}
-                                  </span>
+                                  <span className="gl-help-text">{t("options_labelHelp")}</span>
                                 </span>
                               </div>
                             </div>
@@ -900,9 +898,7 @@ export const OptionsPage: React.FC = () => {
                         )}
 
                         {config.buttons.length === 0 ? (
-                          <p className="gl-help-block">
-                            {t("options_noButtonsConfigured")}
-                          </p>
+                          <p className="gl-help-block">{t("options_noButtonsConfigured")}</p>
                         ) : filteredButtons.length === 0 ? (
                           <p className="gl-help-block">{t("options_noButtonsMatch")}</p>
                         ) : (
@@ -1369,9 +1365,7 @@ export const OptionsPage: React.FC = () => {
                               placeholder="msg., context., "
                             />
                             <span className="gl-help-block help-block">
-                              <span className="gl-help-text">
-                                {t("options_fieldPrefixesHelp")}
-                              </span>
+                              <span className="gl-help-text">{t("options_fieldPrefixesHelp")}</span>
                             </span>
                           </div>
                         </div>
@@ -1419,9 +1413,7 @@ export const OptionsPage: React.FC = () => {
                               placeholder="5"
                             />
                             <span className="gl-help-block help-block">
-                              <span className="gl-help-text">
-                                {t("options_maxParseDepthHelp")}
-                              </span>
+                              <span className="gl-help-text">{t("options_maxParseDepthHelp")}</span>
                             </span>
                           </div>
                         </div>
@@ -1530,9 +1522,7 @@ export const OptionsPage: React.FC = () => {
                               ))}
                             </select>
                             <span className="gl-help-block help-block">
-                              <span className="gl-help-text">
-                                {t("options_languageHelp")}
-                              </span>
+                              <span className="gl-help-text">{t("options_languageHelp")}</span>
                             </span>
                           </div>
                         </div>
@@ -1708,9 +1698,7 @@ export const OptionsPage: React.FC = () => {
                                     Esc
                                   </kbd>
                                 </td>
-                                <td>
-                                  {t("options_shortcutEscDesc")}
-                                </td>
+                                <td>{t("options_shortcutEscDesc")}</td>
                               </tr>
                               <tr>
                                 <td>
@@ -1733,9 +1721,7 @@ export const OptionsPage: React.FC = () => {
                                     Enter
                                   </kbd>
                                 </td>
-                                <td>
-                                  {t("options_shortcutEnterDesc")}
-                                </td>
+                                <td>{t("options_shortcutEnterDesc")}</td>
                               </tr>
                             </tbody>
                           </table>
