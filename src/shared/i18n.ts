@@ -19,7 +19,7 @@ let currentLocale: Locale = "en";
 const messages: Record<Locale, Record<string, string>> = {
   en: {
     // ── Field Selector ─────────────────────────────────────
-    fieldSelector_title: "Select Message Field",
+    fieldSelector_title: "Select Field",
     fieldSelector_description:
       "Which field should Graytool use as the message content for this log row?",
     fieldSelector_saveDefault: "Save this selection as default",
@@ -31,6 +31,7 @@ const messages: Record<Locale, Record<string, string>> = {
     jsonViewer_detailView: "Detail View",
     jsonViewer_close: "Close",
     jsonViewer_field: "Field:",
+    jsonViewer_defaultField: "Default",
     jsonViewer_searchPlaceholder: "Search fields... (/)",
     jsonViewer_copyAll: "Copy All",
     jsonViewer_copiedToClipboard: "Copied to clipboard",
@@ -224,7 +225,7 @@ const messages: Record<Locale, Record<string, string>> = {
 
   tr: {
     // ── Field Selector ─────────────────────────────────────
-    fieldSelector_title: "Mesaj Alanını Seç",
+    fieldSelector_title: "Alan Seç",
     fieldSelector_description:
       "Graytool bu log satırından hangi alanı mesaj içeriği olarak okumalı?",
     fieldSelector_saveDefault: "Bu seçimi varsayılan olarak kaydet",
@@ -236,6 +237,7 @@ const messages: Record<Locale, Record<string, string>> = {
     jsonViewer_detailView: "Detay Görünümü",
     jsonViewer_close: "Kapat",
     jsonViewer_field: "Alan:",
+    jsonViewer_defaultField: "Varsayılan",
     jsonViewer_searchPlaceholder: "Alanlarda ara... (/)",
     jsonViewer_copyAll: "Tümünü Kopyala",
     jsonViewer_copiedToClipboard: "Panoya kopyalandı",
