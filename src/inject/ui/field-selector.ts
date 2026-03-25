@@ -3,6 +3,7 @@
 // Shown when no defaultMessageField is configured.
 
 import type { DiscoveredField } from "../../shared/types";
+import { t } from "../../shared/i18n";
 
 // ─── Public API ───────────────────────────────────────────────
 
@@ -47,12 +48,12 @@ function createModal(fields: DiscoveredField[], onSelect: FieldSelectorCallback)
   const title = document.createElement("div");
   title.className = "gt-field-modal-title";
   title.innerHTML =
-    '<i class="fas fa-list fa-fw" style="margin-right: 6px;"></i> Select Message Field';
+    '<i class="fas fa-list fa-fw" style="margin-right: 6px;"></i> ' + t("fieldSelector_title");
 
   const closeBtn = document.createElement("button");
   closeBtn.className = "gt-field-modal-close";
   closeBtn.innerHTML = '<i class="fas fa-times fa-fw"></i>';
-  closeBtn.title = "Close";
+  closeBtn.title = t("fieldSelector_close");
   closeBtn.addEventListener("click", () => {
     cleanup();
   });
@@ -67,7 +68,7 @@ function createModal(fields: DiscoveredField[], onSelect: FieldSelectorCallback)
 
   const desc = document.createElement("p");
   desc.className = "gt-field-modal-desc";
-  desc.textContent = "Graytool bu log row'undan hangi field'ı mesaj içeriği olarak okumalı?";
+  desc.textContent = t("fieldSelector_description");
   body.appendChild(desc);
 
   // Field options
@@ -126,19 +127,19 @@ function createModal(fields: DiscoveredField[], onSelect: FieldSelectorCallback)
     saveAsDefault = saveCheckbox.checked;
   });
   saveLabel.appendChild(saveCheckbox);
-  saveLabel.appendChild(document.createTextNode("Bu seçimi varsayılan olarak kaydet"));
+  saveLabel.appendChild(document.createTextNode(t("fieldSelector_saveDefault")));
 
   const actionBtns = document.createElement("div");
   actionBtns.className = "gt-field-modal-actions";
 
   const cancelBtn = document.createElement("button");
   cancelBtn.className = "gt-btn gt-btn-default";
-  cancelBtn.textContent = "İptal";
+  cancelBtn.textContent = t("fieldSelector_cancel");
   cancelBtn.addEventListener("click", cleanup);
 
   const selectBtn = document.createElement("button");
   selectBtn.className = "gt-btn gt-btn-primary";
-  selectBtn.textContent = "Seç ve Devam";
+  selectBtn.textContent = t("fieldSelector_selectAndContinue");
   selectBtn.addEventListener("click", () => {
     const selected = fields[selectedIndex];
     cleanup();

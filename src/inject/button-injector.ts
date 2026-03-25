@@ -8,6 +8,7 @@ import type {
   DiscoveredField,
 } from "../shared/types";
 import { escapeHtml } from "../shared/utils";
+import { t } from "../shared/i18n";
 
 // ─── Button Injection ─────────────────────────────────────────
 
@@ -221,7 +222,7 @@ function injectMessageDetailButton(
   btn.className = "gt-msg-detail-btn";
   btn.setAttribute("data-graytool-btn-id", btnId);
   btn.innerHTML = `<i class="fa fa-arrow-up-right-from-square"></i>`;
-  btn.title = "Detail View";
+  btn.title = t("buttonInjector_detailView");
   btn.style.display = "inline-flex";
   btn.style.alignItems = "center";
   btn.style.gap = "4px";

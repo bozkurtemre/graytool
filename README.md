@@ -25,6 +25,7 @@ Read more about contributing to Graytool in [CONTRIBUTING.md](https://github.com
 - Conditional button visibility based on field values
 - JSON viewer and search history for log message details
 - Import/export configuration for sharing between environments
+- Multi-language support (English, Türkçe) — switchable from the options page
 
 ## Project Structure
 
@@ -32,9 +33,10 @@ Read more about contributing to Graytool in [CONTRIBUTING.md](https://github.com
 src/
   manifest.json
   background.ts
-  inject/            # Content script files
-  options/           # Options UI (React)
-  shared/            # Shared types + storage
+  _locales/           # Chrome i18n (en, tr)
+  inject/             # Content script files
+  options/            # Options UI (React)
+  shared/             # Shared types, storage, i18n
   icons/
 ```
 

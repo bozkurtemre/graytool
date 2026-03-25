@@ -1,0 +1,10 @@
+{
+  "extensionName": {
+    "message": "Graytool: graylog developer toolkit",
+    "description": "The display name of the extension."
+  },
+  "extensionDescription": {
+    "message": "Supercharge Graylog with customizable action buttons, auto field discovery, JSON viewer, search history, and more.",
+    "description": "The description of the extension."
+  }
+}
