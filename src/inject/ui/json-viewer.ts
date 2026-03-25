@@ -61,16 +61,16 @@ export function initJsonViewerListener(): void {
   jsonViewerListenerRegistered = true;
 
   document.addEventListener("graytool:open-detail", ((e: CustomEvent) => {
-    const { fields, config } = e.detail as {
+    const { fields, config, row } = e.detail as {
       fields: DiscoveredField[];
       config: GrayToolConfig;
       row: Element;
     };
-    openJsonViewer(fields, config);
+    openJsonViewer(fields, config, row);
   }) as EventListener);
 }
 
-function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig): void {
+function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig, row: Element): void {
   // Close existing viewer if open
   closeJsonViewer();
 
@@ -80,7 +80,7 @@ function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig): void
     // Find the field with that name
     const matchedField = fields.find((f) => f.name === defaultField);
     if (matchedField) {
-      showViewerForContent(matchedField.value, fields, config);
+      showViewerForContent(matchedField.value, fields, config, row);
       return;
     }
   }
@@ -98,7 +98,7 @@ function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig): void
         });
       });
     }
-    showViewerForContent(selectedField.value, fields, config);
+    showViewerForContent(selectedField.value, fields, config, row);
   });
 }
 
@@ -106,16 +106,88 @@ function showViewerForContent(
   rawContent: string,
   allFields: DiscoveredField[],
   config: GrayToolConfig,
+  row: Element,
 ): void {
-  let parsed: Record<string, unknown>;
-  try {
-    parsed = JSON.parse(rawContent);
-  } catch {
-    // Not JSON — wrap it
-    parsed = { message: rawContent };
-  }
+  const parsed = resolveViewerData(rawContent, allFields, row);
 
   createViewerPanel(parsed, rawContent, allFields, config);
+}
+
+function resolveViewerData(
+  rawContent: string,
+  allFields: DiscoveredField[],
+  row: Element,
+): Record<string, unknown> {
+  const direct = parseObjectLike(rawContent);
+  if (direct) return direct;
+
+  // Graylog often keeps full JSON in row body/copy attrs while summary message is truncated.
+  const rowCandidates: string[] = [];
+  const clipboardRaw =
+    row.querySelector("[data-clipboard-text]")?.getAttribute("data-clipboard-text") || "";
+  if (clipboardRaw) rowCandidates.push(clipboardRaw);
+
+  row
+    .querySelectorAll(
+      'td > div, [data-field="message"], [data-field="full_message"], [data-testid="value-actions-title"], pre',
+    )
+    .forEach((el) => {
+      const text = el.textContent?.trim() || "";
+      if (text) rowCandidates.push(text);
+    });
+
+  const rowText = row.textContent?.trim() || "";
+  if (rowText) rowCandidates.push(rowText);
+
+  for (const candidate of rowCandidates) {
+    const parsedFromRow = parseObjectLike(candidate);
+    if (parsedFromRow) return parsedFromRow;
+  }
+
+  for (const field of allFields) {
+    const parsedField = parseObjectLike(field.value);
+    if (parsedField) return parsedField;
+  }
+
+  // Not JSON/object-like — wrap as plain message.
+  return { message: rawContent };
+}
+
+function parseObjectLike(text: string): Record<string, unknown> | null {
+  const trimmed = text.trim();
+
+  const direct = tryParseObject(trimmed);
+  if (direct) return direct;
+
+  // Handles cases like: "message = { ... }"
+  const embedded = extractJsonObjectCandidate(trimmed);
+  if (!embedded) return null;
+
+  return tryParseObject(embedded);
+}
+
+function tryParseObject(text: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(text);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // Not parseable JSON
+  }
+
+  return null;
+}
+
+function extractJsonObjectCandidate(text: string): string | null {
+  const firstBrace = text.indexOf("{");
+  const lastBrace = text.lastIndexOf("}");
+
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace <= firstBrace) {
+    return null;
+  }
+
+  return text.slice(firstBrace, lastBrace + 1);
 }
 
 // ─── Panel Creation ───────────────────────────────────────────
@@ -263,6 +335,7 @@ function createToolbar(
   data: Record<string, unknown>,
   rawContent: string,
 ): HTMLElement {
+  const DEFAULT_FIELD_OPTION = "__graytool_default__";
   const toolbar = document.createElement("div");
   toolbar.className = "gt-json-toolbar";
 
@@ -276,14 +349,14 @@ function createToolbar(
   const fieldSelect = document.createElement("select");
   fieldSelect.className = "gt-json-field-select";
 
+  const defaultOpt = document.createElement("option");
+  defaultOpt.value = DEFAULT_FIELD_OPTION;
+  defaultOpt.textContent = t("jsonViewer_defaultField");
+  fieldSelect.appendChild(defaultOpt);
+
   // Get unique field names that might contain JSON
   const jsonFields = allFields.filter((f) => {
-    try {
-      JSON.parse(f.value);
-      return true;
-    } catch {
-      return f.value.startsWith("{");
-    }
+    return parseObjectLike(f.value) !== null;
   });
 
   if (jsonFields.length > 0) {
@@ -293,25 +366,27 @@ function createToolbar(
       opt.textContent = f.name;
       fieldSelect.appendChild(opt);
     });
-  } else {
-    const opt = document.createElement("option");
-    opt.textContent = "message";
-    fieldSelect.appendChild(opt);
   }
 
+  fieldSelect.value = DEFAULT_FIELD_OPTION;
+
   fieldSelect.addEventListener("change", () => {
+    const body = currentOverlay?.querySelector(".gt-json-body");
+    if (!body) return;
+
+    if (fieldSelect.value === DEFAULT_FIELD_OPTION) {
+      collapseState.clear();
+      renderJsonTree(body as HTMLElement, data);
+      return;
+    }
+
     const selectedField = allFields.find((f) => f.name === fieldSelect.value);
     if (selectedField) {
-      try {
-        const newData = JSON.parse(selectedField.value);
-        const body = currentOverlay?.querySelector(".gt-json-body");
-        if (body) {
-          collapseState.clear();
-          renderJsonTree(body as HTMLElement, newData);
-        }
-      } catch {
-        // Not parseable — ignore
-      }
+      const newData = parseObjectLike(selectedField.value);
+      if (!newData) return;
+
+      collapseState.clear();
+      renderJsonTree(body as HTMLElement, newData);
     }
   });
 
