@@ -23,6 +23,7 @@ const FILES = [
 const DIRS = [
   'icons',
   'webfonts',
+  '_locales',
 ];
 
 const args = process.argv.slice(2);
