@@ -19,7 +19,7 @@ let currentLocale: Locale = "en";
 const messages: Record<Locale, Record<string, string>> = {
   en: {
     // ── Field Selector ─────────────────────────────────────
-    fieldSelector_title: "Select Message Field",
+    fieldSelector_title: "Select Field",
     fieldSelector_description:
       "Which field should Graytool use as the message content for this log row?",
     fieldSelector_saveDefault: "Save this selection as default",
@@ -225,7 +225,7 @@ const messages: Record<Locale, Record<string, string>> = {
 
   tr: {
     // ── Field Selector ─────────────────────────────────────
-    fieldSelector_title: "Mesaj Alanını Seç",
+    fieldSelector_title: "Alan Seç",
     fieldSelector_description:
       "Graytool bu log satırından hangi alanı mesaj içeriği olarak okumalı?",
     fieldSelector_saveDefault: "Bu seçimi varsayılan olarak kaydet",

@@ -354,19 +354,21 @@ function createToolbar(
   defaultOpt.textContent = t("jsonViewer_defaultField");
   fieldSelect.appendChild(defaultOpt);
 
-  // Get unique field names that might contain JSON
-  const jsonFields = allFields.filter((f) => {
-    return parseObjectLike(f.value) !== null;
+  // List all non-empty fields (JSON and non-JSON) with unique names.
+  const uniqueFields = new Map<string, DiscoveredField>();
+  allFields.forEach((field) => {
+    if (!field.value?.trim()) return;
+    if (!uniqueFields.has(field.name)) {
+      uniqueFields.set(field.name, field);
+    }
   });
 
-  if (jsonFields.length > 0) {
-    jsonFields.forEach((f) => {
+  Array.from(uniqueFields.values()).forEach((f) => {
       const opt = document.createElement("option");
       opt.value = f.name;
       opt.textContent = f.name;
       fieldSelect.appendChild(opt);
-    });
-  }
+  });
 
   fieldSelect.value = DEFAULT_FIELD_OPTION;
 
@@ -383,10 +385,17 @@ function createToolbar(
     const selectedField = allFields.find((f) => f.name === fieldSelect.value);
     if (selectedField) {
       const newData = parseObjectLike(selectedField.value);
-      if (!newData) return;
-
       collapseState.clear();
-      renderJsonTree(body as HTMLElement, newData);
+
+      if (newData) {
+        renderJsonTree(body as HTMLElement, newData);
+        return;
+      }
+
+      // Keep non-JSON fields visible without parsing.
+      renderJsonTree(body as HTMLElement, {
+        [selectedField.name]: selectedField.value,
+      });
     }
   });
 
