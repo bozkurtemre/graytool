@@ -74,19 +74,36 @@ function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig, row: 
   // Close existing viewer if open
   closeJsonViewer();
 
+  const selectableFields = collectSelectableFields(fields, row);
+
   const defaultField = config.globalFieldConfig.defaultMessageField;
 
   if (defaultField) {
     // Find the field with that name
-    const matchedField = fields.find((f) => f.name === defaultField);
+    const matchedField = selectableFields.find((f) => f.name === defaultField);
     if (matchedField) {
-      showViewerForContent(matchedField.value, fields, config, row);
+      showViewerForContent(matchedField.value, selectableFields, config, row);
       return;
     }
   }
 
-  // No default → show field selector
-  showFieldSelector(fields, (selectedField, saveAsDefault) => {
+  // Try to resolve viewer data directly (auto-detect full JSON from row).
+  // This avoids the field selector popup when the full JSON is findable but
+  // individual fields aren't enumerable (e.g. Graylog summary rows where the
+  // expanded detail row with data-clipboard-text isn't in the DOM yet).
+  const autoResolved = resolveViewerData("", selectableFields, row);
+  const autoResolvedKeys = Object.keys(autoResolved);
+  const isRealJson = autoResolvedKeys.length > 1 || !autoResolvedKeys.includes("message");
+
+  if (isRealJson) {
+    // Found meaningful JSON — open viewer directly with default view.
+    const rawContent = autoResolvedKeys.length > 0 ? JSON.stringify(autoResolved, null, 2) : "";
+    createViewerPanel(autoResolved, rawContent, selectableFields, config);
+    return;
+  }
+
+  // Fallback: show field selector if auto-detect didn't find rich JSON.
+  showFieldSelector(selectableFields, (selectedField, saveAsDefault) => {
     if (saveAsDefault) {
       // Save to config (fire-and-forget)
       import("../../shared/storage").then(({ saveConfig }) => {
@@ -98,8 +115,131 @@ function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig, row: 
         });
       });
     }
-    showViewerForContent(selectedField.value, fields, config, row);
+    showViewerForContent(selectedField.value, selectableFields, config, row);
   });
+}
+
+function collectSelectableFields(fields: DiscoveredField[], row: Element): DiscoveredField[] {
+  const unique = new Map<string, DiscoveredField>();
+
+  // 1. Start with already-discovered fields.
+  for (const field of fields) {
+    if (!field.value?.trim()) continue;
+    if (!unique.has(field.name)) {
+      unique.set(field.name, field);
+    }
+  }
+
+  // Build a list of DOM scopes to scan: the row itself + parent tbody + sibling rows.
+  // Graylog often puts the expanded message in a separate TR within the same tbody,
+  // which is outside the original summary row element.
+  const scopes: Element[] = [row];
+  const parent = row.parentElement;
+  if (parent && parent.tagName.toLowerCase() === "tbody") {
+    scopes.push(parent);
+  } else if (parent) {
+    // row might be a tbody itself; check its children
+    scopes.push(parent);
+  }
+
+  for (const scope of scopes) {
+    // 2. Scan Graylog DOM attributes: data-field + message-summary-field-*.
+    scope
+      .querySelectorAll("[data-field], [data-testid^='message-summary-field-']")
+      .forEach((el) => {
+        let name = el.getAttribute("data-field") || "";
+        if (!name) {
+          const testId = el.getAttribute("data-testid") || "";
+          if (testId.startsWith("message-summary-field-")) {
+            name = testId.replace("message-summary-field-", "");
+          }
+        }
+
+        const value = el.textContent?.trim() || "";
+        if (!name || !value) return;
+
+        if (!unique.has(name)) {
+          unique.set(name, { name, value, source: "data-field", element: el });
+        }
+      });
+
+    // 3. Graylog renders "fieldname = value" inside value-actions-title spans.
+    scope
+      .querySelectorAll('[data-testid="value-actions-title"], [class*="value-actions"]')
+      .forEach((el) => {
+        const text = el.textContent?.trim() || "";
+        const eqIdx = text.indexOf(" = ");
+        if (eqIdx === -1) return;
+
+        const name = text.slice(0, eqIdx).trim();
+        const value = text.slice(eqIdx + 3).trim();
+        if (!name || !value) return;
+
+        if (!unique.has(name)) {
+          unique.set(name, { name, value, source: "data-field", element: el });
+        }
+      });
+  }
+
+  // 4. Collect JSON parse candidates from the scopes to extract top-level keys.
+  const parseCandidates: string[] = [];
+
+  for (const scope of scopes) {
+    // 4a. data-clipboard-text (full JSON payload on copy buttons).
+    scope.querySelectorAll("[data-clipboard-text]").forEach((el) => {
+      const raw = el.getAttribute("data-clipboard-text") || "";
+      if (raw) parseCandidates.push(raw);
+    });
+
+    // 4b. Expanded detail row divs (td > div, td[colspan] div, pre).
+    scope
+      .querySelectorAll(
+        'td > div, td[colspan] div, pre, [data-field="message"], [data-field="full_message"]',
+      )
+      .forEach((el) => {
+        const text = el.textContent?.trim() || "";
+        if (text.length > 20) parseCandidates.push(text);
+      });
+  }
+
+  // 4c. Existing field values (some may contain full JSON).
+  for (const field of unique.values()) {
+    if (field.value) parseCandidates.push(field.value);
+  }
+
+  // 4d. Full row text as last resort.
+  const rowText = row.textContent?.trim() || "";
+  if (rowText) parseCandidates.push(rowText);
+
+  // 5. Try to parse JSON from candidates and add each top-level key as a field.
+  for (const candidate of parseCandidates) {
+    const parsed = parseObjectLike(candidate);
+    if (!parsed) continue;
+
+    Object.entries(parsed).forEach(([name, value]) => {
+      if (unique.has(name)) return;
+
+      let fieldValue: string;
+      if (value === null || value === undefined) {
+        fieldValue = String(value);
+      } else if (typeof value === "object") {
+        try {
+          fieldValue = JSON.stringify(value);
+        } catch {
+          fieldValue = String(value);
+        }
+      } else {
+        fieldValue = String(value);
+      }
+
+      unique.set(name, { name, value: fieldValue, source: "json-parse" });
+    });
+
+    // First successful parse is enough.
+    break;
+  }
+
+  return Array.from(unique.values());
 }
 
 function showViewerForContent(
@@ -364,10 +504,10 @@ function createToolbar(
   });
 
   Array.from(uniqueFields.values()).forEach((f) => {
-      const opt = document.createElement("option");
-      opt.value = f.name;
-      opt.textContent = f.name;
-      fieldSelect.appendChild(opt);
+    const opt = document.createElement("option");
+    opt.value = f.name;
+    opt.textContent = f.name;
+    fieldSelect.appendChild(opt);
   });
 
   fieldSelect.value = DEFAULT_FIELD_OPTION;
