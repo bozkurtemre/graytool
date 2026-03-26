@@ -1,6 +1,6 @@
 {
   "name": "graytool-extension",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Graytool — Graylog developer toolkit Chrome extension",
   "scripts": {
     "build": "node tasks/build.js",

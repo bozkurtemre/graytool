@@ -53,6 +53,7 @@ let matchedRows: HTMLElement[] = [];
 const collapseState = new Map<string, boolean>();
 let activeKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let jsonViewerListenerRegistered = false;
+let showCounts = true;
 
 // ─── Public API ───────────────────────────────────────────────
 
@@ -73,6 +74,8 @@ export function initJsonViewerListener(): void {
 function openJsonViewer(fields: DiscoveredField[], config: GrayToolConfig, row: Element): void {
   // Close existing viewer if open
   closeJsonViewer();
+
+  showCounts = config.settings.showJsonViewerCounts !== false;
 
   const selectableFields = collectSelectableFields(fields, row);
 
@@ -688,9 +691,12 @@ function renderObject(
   const headerContent = document.createElement("span");
   headerContent.className = "gt-json-row-content";
   headerContent.appendChild(toggle);
+  const countHtml = showCounts
+    ? `<span class="gt-json-length">${t("jsonViewer_nKeys", { n: String(keys.length) })}</span>`
+    : "";
   headerContent.insertAdjacentHTML(
     "beforeend",
-    `<span class="gt-json-punctuation">{</span><span class="gt-json-length">${t("jsonViewer_nKeys", { n: String(keys.length) })}</span>`,
+    `<span class="gt-json-punctuation">{</span>${countHtml}`,
   );
   headerRow.appendChild(headerContent);
   parent.appendChild(headerRow);
@@ -789,9 +795,12 @@ function renderArray(parent: Node, arr: unknown[], path: string, indent: number)
   const headerContent = document.createElement("span");
   headerContent.className = "gt-json-row-content";
   headerContent.appendChild(toggle);
+  const arrCountHtml = showCounts
+    ? `<span class="gt-json-length">${t("jsonViewer_nItems", { n: String(arr.length) })}</span>`
+    : "";
   headerContent.insertAdjacentHTML(
     "beforeend",
-    `<span class="gt-json-punctuation">[</span><span class="gt-json-length">${t("jsonViewer_nItems", { n: String(arr.length) })}</span>`,
+    `<span class="gt-json-punctuation">[</span>${arrCountHtml}`,
   );
   headerRow.appendChild(headerContent);
   parent.appendChild(headerRow);

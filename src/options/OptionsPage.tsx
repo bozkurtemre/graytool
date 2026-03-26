@@ -1492,6 +1492,18 @@ export const OptionsPage: React.FC = () => {
                               <label>
                                 <input
                                   type="checkbox"
+                                  checked={config.settings.showJsonViewerCounts !== false}
+                                  onChange={(e) =>
+                                    handleSettingChange("showJsonViewerCounts", e.target.checked)
+                                  }
+                                />
+                                {t("options_showJsonViewerCounts")}
+                              </label>
+                            </div>
+                            <div className="checkbox">
+                              <label>
+                                <input
+                                  type="checkbox"
                                   checked={config.settings.keyboardShortcutsEnabled}
                                   onChange={(e) =>
                                     handleSettingChange(

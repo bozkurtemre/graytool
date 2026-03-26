@@ -68,6 +68,7 @@ export interface AppSettings {
   jsonViewerEnabled: boolean;
   keyboardShortcutsEnabled: boolean;
   searchHistoryEnabled: boolean;
+  showJsonViewerCounts: boolean;
   language?: string; // "en" | "tr" — undefined = auto-detect from browser
 }
 
