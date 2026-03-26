@@ -619,7 +619,7 @@ export const OptionsPage: React.FC = () => {
             </ul>
             <ul className="gl-navbar-right nav navbar-nav navbar-right">
               <li>
-                <span style={{ padding: "15px", color: "var(--gl-text-muted)", fontSize: "12px" }}>
+                <span style={{ padding: "15px", color: "var(--gl-text-muted)", fontSize: "14px" }}>
                   v{chrome.runtime.getManifest().version}
                 </span>
               </li>
