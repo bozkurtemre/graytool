@@ -620,7 +620,7 @@ export const OptionsPage: React.FC = () => {
             <ul className="gl-navbar-right nav navbar-nav navbar-right">
               <li>
                 <span style={{ padding: "15px", color: "var(--gl-text-muted)", fontSize: "12px" }}>
-                  {saving ? t("options_saving") : t("options_autoSaved")}
+                  v{chrome.runtime.getManifest().version}
                 </span>
               </li>
             </ul>
