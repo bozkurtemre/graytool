@@ -699,7 +699,7 @@ function renderObject(
   const childContainer = document.createElement("div");
   childContainer.id = containerId;
   childContainer.className = `gt-json-collapsible${isCollapsed ? " gt-hidden" : ""}`;
-  childContainer.style.paddingLeft = `${(indent + 1) * 16}px`;
+  childContainer.style.paddingLeft = "16px";
 
   keys.forEach((key, i) => {
     const childPath = path ? `${path}.${key}` : key;
@@ -800,7 +800,7 @@ function renderArray(parent: Node, arr: unknown[], path: string, indent: number)
   const childContainer = document.createElement("div");
   childContainer.id = containerId;
   childContainer.className = `gt-json-collapsible${isCollapsed ? " gt-hidden" : ""}`;
-  childContainer.style.paddingLeft = `${(indent + 1) * 16}px`;
+  childContainer.style.paddingLeft = "16px";
 
   arr.forEach((item, i) => {
     renderValue(childContainer, item, `${path}[${i}]`, indent + 1);
