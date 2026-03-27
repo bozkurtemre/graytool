@@ -12,6 +12,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   jsonViewerEnabled: true,
   keyboardShortcutsEnabled: true,
   searchHistoryEnabled: true,
+  showJsonViewerCounts: true,
   language: undefined,
 };
 

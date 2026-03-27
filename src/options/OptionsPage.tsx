@@ -619,8 +619,8 @@ export const OptionsPage: React.FC = () => {
             </ul>
             <ul className="gl-navbar-right nav navbar-nav navbar-right">
               <li>
-                <span style={{ padding: "15px", color: "var(--gl-text-muted)", fontSize: "12px" }}>
-                  {saving ? t("options_saving") : t("options_autoSaved")}
+                <span style={{ padding: "15px", color: "var(--gl-text-muted)", fontSize: "14px" }}>
+                  v{chrome.runtime.getManifest().version}
                 </span>
               </li>
             </ul>
@@ -1486,6 +1486,18 @@ export const OptionsPage: React.FC = () => {
                                   }
                                 />
                                 {t("options_enableJsonViewer")}
+                              </label>
+                            </div>
+                            <div className="checkbox">
+                              <label>
+                                <input
+                                  type="checkbox"
+                                  checked={config.settings.showJsonViewerCounts !== false}
+                                  onChange={(e) =>
+                                    handleSettingChange("showJsonViewerCounts", e.target.checked)
+                                  }
+                                />
+                                {t("options_showJsonViewerCounts")}
                               </label>
                             </div>
                             <div className="checkbox">
